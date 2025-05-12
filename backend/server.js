@@ -15,6 +15,7 @@ app.get('/', (req, res) => res.send('API running'));
 
 app.post('/checkin', async (req, res) => {
   const { name, phone, service, stylist } = req.body;
+ console.log('New check-in:', { name, phone, service, stylist });
   try {
     const result = await pool.query(
       'INSERT INTO checkins (name, phone, service, stylist) VALUES ($1, $2, $3, $4) RETURNING *',
