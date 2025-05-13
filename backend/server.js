@@ -13,27 +13,33 @@ const pool = new Pool({
 
 app.get('/', (req, res) => res.send('API running'));
 
+// ✅ THIS IS THE FIXED DUMMY POST
 app.post('/checkin', async (req, res) => {
   const { name, phone, service, stylist } = req.body;
- console.log('New check-in:', { name, phone, service, stylist });
-  try {
-    const result = await pool.query(
-      'INSERT INTO checkins (name, phone, service, stylist) VALUES ($1, $2, $3, $4) RETURNING *',
-      [name, phone, service, stylist]
-    );
-    res.json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  console.log('New check-in:', { name, phone, service, stylist });
+
+  // ✅ bypass DB temporarily
+  res.json({
+    id: Math.floor(Math.random() * 1000),
+    name,
+    phone,
+    service,
+    stylist,
+    status: 'Waiting'
+  });
 });
 
+// ✅ DUMMY GET CHECKINS
 app.get('/checkins', async (req, res) => {
-  const result = await pool.query('SELECT * FROM checkins WHERE status = $1 ORDER BY created_at ASC', ['Waiting']);
-  res.json(result.rows);
+  res.json([
+    { id: 1, name: 'John Doe', phone: '1234567890', service: 'Haircut', stylist: 'Mike', status: 'Waiting' },
+    { id: 2, name: 'Jane Smith', phone: '9876543210', service: 'Eyebrow Threading', stylist: 'Anna', status: 'Waiting' }
+  ]);
 });
 
+// ✅ DUMMY PUT CHECKINS
 app.put('/checkins/:id', async (req, res) => {
-  await pool.query('UPDATE checkins SET status = $1 WHERE id = $2', ['Served', req.params.id]);
+  console.log(`Marking check-in ID ${req.params.id} as Served`);
   res.sendStatus(200);
 });
 
