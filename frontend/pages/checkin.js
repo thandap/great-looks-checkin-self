@@ -16,18 +16,19 @@ export default function CheckIn() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await fetch('http://localhost:5000/checkin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-      setSubmitted(true);
-    } catch (error) {
-      console.error('Check-in failed', error);
-    }
-  };
+  e.preventDefault();
+  try {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
+    });
+    setSubmitted(true);
+  } catch (error) {
+    console.error('Check-in failed', error);
+  }
+};
+
 
   return (
     <>
