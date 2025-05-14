@@ -7,13 +7,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// PostgreSQL connection
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
+// Health check
 app.get('/', (req, res) => res.send('API running ✅'));
 
-// ✅ POST - add new check-in
+// Create check-in
 app.post('/checkin', async (req, res) => {
   const { name, phone, service, stylist } = req.body;
   console.log('New check-in:', { name, phone, service, stylist });
@@ -27,12 +30,12 @@ app.post('/checkin', async (req, res) => {
     );
     res.json(result.rows[0]);
   } catch (err) {
-    console.error(err);
+    console.error('Error inserting check-in:', err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// ✅ GET - list all waiting check-ins
+// Get waiting check-ins
 app.get('/checkins', async (req, res) => {
   try {
     const result = await pool.query(
@@ -42,12 +45,12 @@ app.get('/checkins', async (req, res) => {
     );
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
+    console.error('Error fetching check-ins:', err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// ✅ PUT - mark check-in as Served
+// Mark check-in as served
 app.put('/checkins/:id', async (req, res) => {
   try {
     await pool.query(
@@ -56,13 +59,14 @@ app.put('/checkins/:id', async (req, res) => {
        WHERE id = $1`,
       [req.params.id]
     );
-    console.log(`Marked check-in ID ${req.params.id} as Served`);
+    console.log(`Check-in ID ${req.params.id} marked as served`);
     res.sendStatus(200);
   } catch (err) {
-    console.error(err);
+    console.error('Error updating check-in:', err);
     res.status(500).json({ error: err.message });
   }
 });
 
+// Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
+app.listen(PORT, () => console.log(`✅ Backend running on port ${PORT}`));
