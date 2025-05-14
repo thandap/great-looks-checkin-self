@@ -11,36 +11,57 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL
 });
 
-app.get('/', (req, res) => res.send('API running'));
+app.get('/', (req, res) => res.send('API running ✅'));
 
-// ✅ THIS IS THE FIXED DUMMY POST
+// ✅ POST - add new check-in
 app.post('/checkin', async (req, res) => {
   const { name, phone, service, stylist } = req.body;
   console.log('New check-in:', { name, phone, service, stylist });
 
-  // ✅ bypass DB temporarily
-  res.json({
-    id: Math.floor(Math.random() * 1000),
-    name,
-    phone,
-    service,
-    stylist,
-    status: 'Waiting'
-  });
+  try {
+    const result = await pool.query(
+      `INSERT INTO checkins (name, phone, service, stylist) 
+       VALUES ($1, $2, $3, $4) 
+       RETURNING *`,
+      [name, phone, service, stylist]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// ✅ DUMMY GET CHECKINS
+// ✅ GET - list all waiting check-ins
 app.get('/checkins', async (req, res) => {
-  res.json([
-    { id: 1, name: 'John Doe', phone: '1234567890', service: 'Haircut', stylist: 'Mike', status: 'Waiting' },
-    { id: 2, name: 'Jane Smith', phone: '9876543210', service: 'Eyebrow Threading', stylist: 'Anna', status: 'Waiting' }
-  ]);
+  try {
+    const result = await pool.query(
+      `SELECT * FROM checkins 
+       WHERE status = 'Waiting' 
+       ORDER BY created_at ASC`
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// ✅ DUMMY PUT CHECKINS
+// ✅ PUT - mark check-in as Served
 app.put('/checkins/:id', async (req, res) => {
-  console.log(`Marking check-in ID ${req.params.id} as Served`);
-  res.sendStatus(200);
+  try {
+    await pool.query(
+      `UPDATE checkins 
+       SET status = 'Served' 
+       WHERE id = $1`,
+      [req.params.id]
+    );
+    console.log(`Marked check-in ID ${req.params.id} as Served`);
+    res.sendStatus(200);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 const PORT = process.env.PORT || 5000;
