@@ -1,7 +1,10 @@
 import { useState } from 'react';
+import { useRouter } from 'next/router';
 import NavBar from '../components/NavBar';
 
 export default function CheckIn() {
+  const router = useRouter();   // ✅ MUST be inside the component
+
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -16,19 +19,19 @@ export default function CheckIn() {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkin`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData)
-    });
-    setSubmitted(true);
-  } catch (error) {
-    console.error('Check-in failed', error);
-  }
-};
-
+    e.preventDefault();
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      setSubmitted(true);
+      router.push('/');    // ✅ redirect after submit
+    } catch (error) {
+      console.error('Check-in failed', error);
+    }
+  };
 
   return (
     <>

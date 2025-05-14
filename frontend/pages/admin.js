@@ -1,44 +1,51 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import NavBar from '../components/NavBar';
 
 export default function Admin() {
   const [checkins, setCheckins] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchCheckins = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins`);
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setCheckins(data);
+      } else {
+        console.error('Unexpected response:', data);
+        setCheckins([]);
+      }
+    } catch (err) {
+      console.error('Failed to fetch check-ins', err);
+      setCheckins([]);
+    }
+    setLoading(false);
+  };
+
+  const markServed = async (id) => {
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins/${id}`, { method: 'PUT' });
+      fetchCheckins(); // Refresh after update
+    } catch (err) {
+      console.error('Failed to mark as served', err);
+    }
+  };
 
   useEffect(() => {
     fetchCheckins();
   }, []);
 
-  const fetchCheckins = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/checkins');
-      const data = await response.json();
-      setCheckins(data);
-    } catch (error) {
-      console.error('Error fetching check-ins', error);
-    }
-  };
-
-  const handleMarkServed = async (id) => {
-    try {
-      await fetch(`http://localhost:5000/checkins/${id}`, {
-        method: 'PUT'
-      });
-      // Reload the list after marking served
-      fetchCheckins();
-    } catch (error) {
-      console.error('Error marking check-in as served', error);
-    }
-  };
-
   return (
     <>
       <NavBar />
-      <div style={{ padding: '20px' }}>
+      <div style={{ textAlign: 'center', padding: '50px' }}>
         <h1>Waiting Queue</h1>
-        {checkins.length === 0 ? (
-          <p>No current check-ins.</p>
+        {loading ? (
+          <p>Loading...</p>
+        ) : checkins.length === 0 ? (
+          <p>No customers waiting.</p>
         ) : (
-          <table border="1" cellPadding="10" style={{ margin: 'auto' }}>
+          <table border="1" style={{ margin: '0 auto' }}>
             <thead>
               <tr>
                 <th>Name</th>
@@ -49,16 +56,14 @@ export default function Admin() {
               </tr>
             </thead>
             <tbody>
-              {checkins.map((checkin) => (
-                <tr key={checkin.id}>
-                  <td>{checkin.name}</td>
-                  <td>{checkin.phone}</td>
-                  <td>{checkin.service}</td>
-                  <td>{checkin.stylist}</td>
+              {checkins.map((c) => (
+                <tr key={c.id}>
+                  <td>{c.name}</td>
+                  <td>{c.phone}</td>
+                  <td>{c.service}</td>
+                  <td>{c.stylist}</td>
                   <td>
-                    <button onClick={() => handleMarkServed(checkin.id)}>
-                      Mark Served
-                    </button>
+                    <button onClick={() => markServed(c.id)}>Mark Served</button>
                   </td>
                 </tr>
               ))}
