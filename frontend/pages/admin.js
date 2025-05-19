@@ -1,9 +1,9 @@
+// ADA refactor for admin panel + date formatting
 import { useEffect, useState } from 'react';
 import NavBar from '../components/NavBar';
 
 export default function Admin() {
   const [checkins, setCheckins] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   const fetchCheckins = async () => {
     try {
@@ -12,17 +12,15 @@ export default function Admin() {
       setCheckins(data);
     } catch (err) {
       console.error('Error fetching check-ins:', err);
-    } finally {
-      setLoading(false);
     }
   };
 
-  const markAsServed = async (id) => {
+  const markServed = async (id) => {
     try {
       await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins/${id}`, {
-        method: 'PUT',
+        method: 'PUT'
       });
-      setCheckins(checkins.filter((c) => c.id !== id));
+      fetchCheckins();
     } catch (err) {
       console.error('Error updating check-in:', err);
     }
@@ -35,47 +33,37 @@ export default function Admin() {
   return (
     <>
       <NavBar />
-      <div className="p-8">
-        <h1 className="text-3xl font-bold mb-4 text-center">Waiting Queue</h1>
+      <main className="min-h-screen bg-gray-50 p-6" role="main">
+        <section className="max-w-4xl mx-auto" aria-labelledby="admin-heading">
+          <h1 id="admin-heading" className="text-3xl font-bold text-gray-800 mb-6">Waiting Queue</h1>
 
-        {loading ? (
-          <p className="text-center">Loading...</p>
-        ) : checkins.length === 0 ? (
-          <p className="text-center text-gray-500">No customers waiting.</p>
-        ) : (
-          <table className="min-w-full bg-white shadow-md rounded-md overflow-hidden">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="py-2 px-4">Name</th>
-                <th className="py-2 px-4">Phone</th>
-                <th className="py-2 px-4">Service</th>
-                <th className="py-2 px-4">Stylist</th>
-                <th className="py-2 px-4">Time</th>
-                <th className="py-2 px-4">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {checkins.map((c) => (
-                <tr key={c.id} className="border-t">
-                  <td className="py-2 px-4">{c.name}</td>
-                  <td className="py-2 px-4">{c.phone}</td>
-                  <td className="py-2 px-4">{c.service}</td>
-                  <td className="py-2 px-4">{c.stylist}</td>
-                  <td className="py-2 px-4">{new Date(c.time).toLocaleString()}</td>
-                  <td className="py-2 px-4">
-                    <button
-                      onClick={() => markAsServed(c.id)}
-                      className="bg-green-500 hover:bg-green-600 text-white py-1 px-3 rounded"
-                    >
-                      Served
-                    </button>
-                  </td>
-                </tr>
+          {checkins.length === 0 ? (
+            <p className="text-gray-500">No customers waiting.</p>
+          ) : (
+            <ul className="space-y-4">
+              {checkins.map(({ id, name, phone, service, stylist, time }) => (
+                <li
+                  key={id}
+                  className="bg-white shadow-md rounded-lg p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center"
+                  aria-label={`Check-in for ${name}`}
+                >
+                  <div>
+                    <p className="text-lg font-semibold text-gray-800">{name}</p>
+                    <p className="text-gray-600">📞 {phone} | 💇 {service} | ✂️ {stylist}</p>
+                    {time && <p className="text-gray-500 text-sm mt-1">⏰ {new Date(time).toLocaleString()}</p>}
+                  </div>
+                  <button
+                    onClick={() => markServed(id)}
+                    className="mt-3 sm:mt-0 sm:ml-4 px-4 py-2 bg-[#8F9779] text-white rounded hover:bg-[#7b8569] transition"
+                  >
+                    Mark as Served
+                  </button>
+                </li>
               ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+            </ul>
+          )}
+        </section>
+      </main>
     </>
   );
 }
