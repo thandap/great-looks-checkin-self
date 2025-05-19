@@ -34,23 +34,89 @@ export default function CheckIn() {
   };
 
   return (
-    <>
-      <NavBar />
-      <div style={{ textAlign: 'center', padding: '50px' }}>
-        <h1>Check In Online</h1>
-        {!submitted ? (
-          <form onSubmit={handleSubmit} style={{ display: 'inline-block', textAlign: 'left' }}>
-            <label>Name:<br /><input type="text" name="name" value={formData.name} onChange={handleChange} required /></label><br /><br />
-            <label>Phone:<br /><input type="text" name="phone" value={formData.phone} onChange={handleChange} required /></label><br /><br />
-            <label>Service:<br /><input type="text" name="service" value={formData.service} onChange={handleChange} required /></label><br /><br />
-            <label>Preferred Stylist:<br /><input type="text" name="stylist" value={formData.stylist} onChange={handleChange} /></label><br /><br />
-            <label>Preferred Time:<br /><input type="text" name="time" value={formData.time} onChange={handleChange} /></label><br /><br />
-            <button type="submit">Check In</button>
-          </form>
-        ) : (
-          <h3>Thank you! Your check-in has been received.</h3>
-        )}
-      </div>
-    </>
+   <>
+  <NavBar />
+  <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
+    <div className="bg-white shadow-2xl rounded-2xl p-8 max-w-md w-full">
+      <h1 className="text-3xl font-serif text-center text-black mb-6">Check In Online</h1>
+
+      {!submitted ? (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block mb-1 font-medium text-gray-700">Name</label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gold-400"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium text-gray-700">Phone</label>
+            <input
+              type="text"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              required
+              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gold-400"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium text-gray-700">Service</label>
+            <input
+              type="text"
+              name="service"
+              value={formData.service}
+              onChange={handleChange}
+              required
+              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gold-400"
+            />
+          </div>
+
+         <div>
+  <label className="block mb-1 font-medium text-gray-700">Preferred Stylist</label>
+  <select
+    name="stylist"
+    value={formData.stylist}
+    onChange={handleChange}
+    className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+  >
+    <option value="">Select Stylist</option>
+    <option value="Jameel">Jameel</option>
+    <option value="Mike">Mike</option>
+    <option value="Anna">Anna</option>
+  </select>
+</div>
+
+<div>
+  <label className="block mb-1 font-medium text-gray-700">Preferred Time</label>
+  <input
+    type="datetime-local"
+    name="time"
+    value={formData.time}
+    onChange={handleChange}
+    className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+  />
+</div>
+
+          <button
+            type="submit"
+            className="w-full bg-gold-400 text-white py-2 rounded-md hover:bg-yellow-500 transition"
+          >
+            Check In
+          </button>
+        </form>
+      ) : (
+        <h3 className="text-center text-green-600 text-xl font-medium">✅ Thank you! Your check-in has been received.</h3>
+      )}
+    </div>
+  </div>
+</>
+
   );
 }
