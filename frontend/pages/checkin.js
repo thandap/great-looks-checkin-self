@@ -1,9 +1,12 @@
+// Step 3: ADA Compliance Enhancements
+// We'll focus on semantic structure, accessibility labels, keyboard nav, and contrast.
+
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import NavBar from '../components/NavBar';
 
 export default function CheckIn() {
-  const router = useRouter();   // ✅ MUST be inside the component
+  const router = useRouter();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -27,96 +30,104 @@ export default function CheckIn() {
         body: JSON.stringify(formData)
       });
       setSubmitted(true);
-      router.push('/');    // ✅ redirect after submit
+      router.push('/');
     } catch (error) {
       console.error('Check-in failed', error);
     }
   };
 
   return (
-   <>
-  <NavBar />
-  <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-    <div className="bg-white shadow-2xl rounded-2xl p-8 max-w-md w-full">
-      <h1 className="text-3xl font-serif text-center text-black mb-6">Check In Online</h1>
+    <>
+      <NavBar />
+      <main className="min-h-screen bg-[#FDFBF9] flex items-center justify-center px-4" role="main">
+        <section className="bg-white shadow-2xl rounded-2xl p-8 max-w-md w-full" aria-labelledby="checkin-heading">
+          <h1 id="checkin-heading" className="text-3xl font-serif text-center text-black mb-6">
+            Check In Online
+          </h1>
 
-      {!submitted ? (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block mb-1 font-medium text-gray-700">Name</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gold-400"
-            />
-          </div>
+          {!submitted ? (
+            <form onSubmit={handleSubmit} className="space-y-5" aria-label="Check-in form">
+              <div>
+                <label htmlFor="name" className="block mb-1 font-medium text-gray-700">Name</label>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#8F9779]"
+                />
+              </div>
 
-          <div>
-            <label className="block mb-1 font-medium text-gray-700">Phone</label>
-            <input
-              type="text"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gold-400"
-            />
-          </div>
+              <div>
+                <label htmlFor="phone" className="block mb-1 font-medium text-gray-700">Phone</label>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  required
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#8F9779]"
+                />
+              </div>
 
-          <div>
-            <label className="block mb-1 font-medium text-gray-700">Service</label>
-            <input
-              type="text"
-              name="service"
-              value={formData.service}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gold-400"
-            />
-          </div>
+              <div>
+                <label htmlFor="service" className="block mb-1 font-medium text-gray-700">Service</label>
+                <input
+                  id="service"
+                  name="service"
+                  type="text"
+                  required
+                  value={formData.service}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#8F9779]"
+                />
+              </div>
 
-         <div>
-  <label className="block mb-1 font-medium text-gray-700">Preferred Stylist</label>
-  <select
-    name="stylist"
-    value={formData.stylist}
-    onChange={handleChange}
-    className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-  >
-    <option value="">Select Stylist</option>
-    <option value="Jameel">Jameel</option>
-    <option value="Mike">Mike</option>
-    <option value="Anna">Anna</option>
-  </select>
-</div>
+              <div>
+                <label htmlFor="stylist" className="block mb-1 font-medium text-gray-700">Preferred Stylist</label>
+                <select
+                  id="stylist"
+                  name="stylist"
+                  value={formData.stylist}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#8F9779]"
+                >
+                  <option value="">Select Stylist</option>
+                  <option value="Jameel">Jameel</option>
+                  <option value="Mike">Mike</option>
+                  <option value="Anna">Anna</option>
+                </select>
+              </div>
 
-<div>
-  <label className="block mb-1 font-medium text-gray-700">Preferred Time</label>
-  <input
-    type="datetime-local"
-    name="time"
-    value={formData.time}
-    onChange={handleChange}
-    className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-  />
-</div>
+              <div>
+                <label htmlFor="time" className="block mb-1 font-medium text-gray-700">Preferred Time</label>
+                <input
+                  id="time"
+                  name="time"
+                  type="datetime-local"
+                  value={formData.time}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#8F9779]"
+                />
+              </div>
 
-          <button
-            type="submit"
-            className="w-full bg-gold-400 text-white py-2 rounded-md hover:bg-yellow-500 transition"
-          >
-            Check In
-          </button>
-        </form>
-      ) : (
-        <h3 className="text-center text-green-600 text-xl font-medium">✅ Thank you! Your check-in has been received.</h3>
-      )}
-    </div>
-  </div>
-</>
-
+              <button
+                type="submit"
+                className="w-full bg-[#8F9779] text-white py-2 rounded-md hover:bg-[#7b8569] transition"
+              >
+                Check In
+              </button>
+            </form>
+          ) : (
+            <h2 className="text-center text-green-600 text-xl font-medium" role="status">
+              ✅ Thank you! Your check-in has been received.
+            </h2>
+          )}
+        </section>
+      </main>
+    </>
   );
 }
