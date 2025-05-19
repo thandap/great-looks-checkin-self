@@ -9,25 +9,22 @@ export default function Admin() {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins`);
       const data = await res.json();
-      if (Array.isArray(data)) {
-        setCheckins(data);
-      } else {
-        console.error('Unexpected response:', data);
-        setCheckins([]);
-      }
+      setCheckins(data);
     } catch (err) {
-      console.error('Failed to fetch check-ins', err);
-      setCheckins([]);
+      console.error('Error fetching check-ins:', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  const markServed = async (id) => {
+  const markAsServed = async (id) => {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins/${id}`, { method: 'PUT' });
-      fetchCheckins(); // Refresh after update
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins/${id}`, {
+        method: 'PUT',
+      });
+      setCheckins(checkins.filter((c) => c.id !== id));
     } catch (err) {
-      console.error('Failed to mark as served', err);
+      console.error('Error updating check-in:', err);
     }
   };
 
@@ -38,32 +35,40 @@ export default function Admin() {
   return (
     <>
       <NavBar />
-      <div style={{ textAlign: 'center', padding: '50px' }}>
-        <h1>Waiting Queue</h1>
+      <div className="p-8">
+        <h1 className="text-3xl font-bold mb-4 text-center">Waiting Queue</h1>
+
         {loading ? (
-          <p>Loading...</p>
+          <p className="text-center">Loading...</p>
         ) : checkins.length === 0 ? (
-          <p>No customers waiting.</p>
+          <p className="text-center text-gray-500">No customers waiting.</p>
         ) : (
-          <table border="1" style={{ margin: '0 auto' }}>
-            <thead>
+          <table className="min-w-full bg-white shadow-md rounded-md overflow-hidden">
+            <thead className="bg-gray-100">
               <tr>
-                <th>Name</th>
-                <th>Phone</th>
-                <th>Service</th>
-                <th>Stylist</th>
-                <th>Action</th>
+                <th className="py-2 px-4">Name</th>
+                <th className="py-2 px-4">Phone</th>
+                <th className="py-2 px-4">Service</th>
+                <th className="py-2 px-4">Stylist</th>
+                <th className="py-2 px-4">Time</th>
+                <th className="py-2 px-4">Action</th>
               </tr>
             </thead>
             <tbody>
               {checkins.map((c) => (
-                <tr key={c.id}>
-                  <td>{c.name}</td>
-                  <td>{c.phone}</td>
-                  <td>{c.service}</td>
-                  <td>{c.stylist}</td>
-                  <td>
-                    <button onClick={() => markServed(c.id)}>Mark Served</button>
+                <tr key={c.id} className="border-t">
+                  <td className="py-2 px-4">{c.name}</td>
+                  <td className="py-2 px-4">{c.phone}</td>
+                  <td className="py-2 px-4">{c.service}</td>
+                  <td className="py-2 px-4">{c.stylist}</td>
+                  <td className="py-2 px-4">{new Date(c.time).toLocaleString()}</td>
+                  <td className="py-2 px-4">
+                    <button
+                      onClick={() => markAsServed(c.id)}
+                      className="bg-green-500 hover:bg-green-600 text-white py-1 px-3 rounded"
+                    >
+                      Served
+                    </button>
                   </td>
                 </tr>
               ))}
