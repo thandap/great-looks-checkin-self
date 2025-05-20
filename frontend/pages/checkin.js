@@ -1,6 +1,3 @@
-// Step 3: ADA Compliance Enhancements
-// We'll focus on semantic structure, accessibility labels, keyboard nav, and contrast.
-
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import NavBar from '../components/NavBar';
@@ -16,6 +13,7 @@ export default function CheckIn() {
     time: ''
   });
   const [submitted, setSubmitted] = useState(false);
+  const [estimatedWait, setEstimatedWait] = useState(null); // ⏳ state
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -29,8 +27,14 @@ export default function CheckIn() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
+
+      // ✅ Fetch waiting queue to estimate wait time
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins`);
+      const checkins = await res.json();
+      const avgMinutes = 15;
+      setEstimatedWait(checkins.length * avgMinutes);
+
       setSubmitted(true);
-      router.push('/');
     } catch (error) {
       console.error('Check-in failed', error);
     }
@@ -122,9 +126,16 @@ export default function CheckIn() {
               </button>
             </form>
           ) : (
-            <h2 className="text-center text-green-600 text-xl font-medium" role="status">
-              ✅ Thank you! Your check-in has been received.
-            </h2>
+            <>
+              <h2 className="text-center text-green-600 text-xl font-medium" role="status">
+                ✅ Thank you! Your check-in has been received.
+              </h2>
+              {estimatedWait !== null && (
+                <p className="text-center text-gray-700 mt-2">
+                  ⏳ Estimated wait time: ~{estimatedWait} minutes.
+                </p>
+              )}
+            </>
           )}
         </section>
       </main>
