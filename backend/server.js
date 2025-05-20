@@ -39,9 +39,10 @@ app.post('/checkin', async (req, res) => {
 app.get('/checkins', async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT * FROM checkins 
-       WHERE status = 'Waiting' 
-       ORDER BY created_at ASC`
+      `SELECT id, name, stylist, service, status, created_at
+FROM checkins
+WHERE status = 'Waiting'
+ORDER BY created_at ASC`
     );
     res.json(result.rows);
   } catch (err) {
