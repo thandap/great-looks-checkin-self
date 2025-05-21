@@ -16,6 +16,20 @@ const pool = new Pool({
 // Health check
 app.get('/', (req, res) => res.send('API running ✅'));
 
+//Get stlylists
+app.get('/stylists', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, name FROM stylists WHERE is_active = true ORDER BY name`
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching stylists:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 // Create check-in
 app.post('/checkin', async (req, res) => {
   const { name, phone, service, stylist } = req.body;
