@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import NavBar from '../components/NavBar';
 
@@ -12,8 +12,23 @@ export default function CheckIn() {
     stylist: '',
     time: ''
   });
+  const [stylists, setStylists] = useState([]);
   const [submitted, setSubmitted] = useState(false);
-  const [estimatedWait, setEstimatedWait] = useState(null); // ⏳ state
+  const [estimatedWait, setEstimatedWait] = useState(null);
+
+  useEffect(() => {
+    // Fetch stylists from backend
+    const fetchStylists = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stylists`);
+        const data = await res.json();
+        setStylists(data);
+      } catch (err) {
+        console.error('Failed to load stylists:', err);
+      }
+    };
+    fetchStylists();
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -28,11 +43,15 @@ export default function CheckIn() {
         body: JSON.stringify(formData)
       });
 
-      // ✅ Fetch waiting queue to estimate wait time
+      // ✅ Fetch waiting queue and filter by stylist
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins`);
       const checkins = await res.json();
+      const waitingForSameStylist = checkins.filter(
+        (c) => c.stylist === formData.stylist
+      );
+
       const avgMinutes = 15;
-      setEstimatedWait(checkins.length * avgMinutes);
+      setEstimatedWait(waitingForSameStylist.length * avgMinutes);
 
       setSubmitted(true);
     } catch (error) {
@@ -97,12 +116,13 @@ export default function CheckIn() {
                   name="stylist"
                   value={formData.stylist}
                   onChange={handleChange}
+                  required
                   className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#8F9779]"
                 >
                   <option value="">Select Stylist</option>
-                  <option value="Jameel">Jameel</option>
-                  <option value="Mike">Mike</option>
-                  <option value="Anna">Anna</option>
+                  {stylists.map(({ id, name }) => (
+                    <option key={id} value={name}>{name}</option>
+                  ))}
                 </select>
               </div>
 
@@ -132,7 +152,7 @@ export default function CheckIn() {
               </h2>
               {estimatedWait !== null && (
                 <p className="text-center text-gray-700 mt-2">
-                  ⏳ Estimated wait time: ~{estimatedWait} minutes.
+                  ⏳ Estimated wait time for {formData.stylist}: ~{estimatedWait} minutes.
                 </p>
               )}
             </>
