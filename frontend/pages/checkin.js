@@ -96,19 +96,27 @@ export default function CheckIn() {
     title="Please enter a valid 10-digit phone number"
     className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#8F9779]"
   />
+<div>
+  <label htmlFor="service" className="block mb-1 font-medium text-gray-700">Service</label>
+  <select
+    id="service"
+    name="service"
+    required
+    value={formData.service}
+    onChange={handleChange}
+    className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#8F9779]"
+  >
+    <option value="">Select Service</option>
+    <option value="Haircut">Haircut</option>
+    <option value="Shave">Shave</option>
+    <option value="Beard Trim">Beard Trim</option>
+    <option value="Hair Color">Hair Color</option>
+    <option value="Eyebrow Threading">Eyebrow Threading</option>
+    <option value="Facial">Facial</option>
+  </select>
 </div>
-              <div>
-                <label htmlFor="service" className="block mb-1 font-medium text-gray-700">Service</label>
-                <input
-                  id="service"
-                  name="service"
-                  type="text"
-                  required
-                  value={formData.service}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#8F9779]"
-                />
-              </div>
+
+
 
               <div>
                 <label htmlFor="stylist" className="block mb-1 font-medium text-gray-700">Preferred Stylist</label>
@@ -127,17 +135,17 @@ export default function CheckIn() {
                 </select>
               </div>
 
-              <div>
-                <label htmlFor="time" className="block mb-1 font-medium text-gray-700">Preferred Time</label>
-                <input
-                  id="time"
-                  name="time"
-                  type="datetime-local"
-                  value={formData.time}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#8F9779]"
-                />
-              </div>
+             <input
+  id="time"
+  name="time"
+  type="datetime-local"
+  value={formData.time}
+  min={new Date().toISOString().slice(0, 16)}  // Prevent past time
+  onChange={handleChange}
+  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#8F9779]"
+  required
+/>
+
 
               <button
                 type="submit"
