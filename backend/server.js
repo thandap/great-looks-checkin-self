@@ -64,6 +64,18 @@ ORDER BY created_at ASC`
     res.status(500).json({ error: err.message });
   }
 });
+// Get list of active services
+app.get('/services', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, name FROM services WHERE is_active = true ORDER BY name`
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching services:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Mark check-in as served
 app.put('/checkins/:id', async (req, res) => {
