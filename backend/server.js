@@ -111,7 +111,7 @@ app.get('/availability/:stylist', async (req, res) => {
     const result = await pool.query(
       `SELECT time FROM checkins 
        WHERE stylist = $1 
-         AND time >= $2 AND time < $3
+         AND created_at >= $2 AND time < $3
          AND status = 'Waiting'`,
       [stylist, today.toISOString(), tomorrow.toISOString()]
     );
@@ -169,7 +169,7 @@ app.get('/availability', async (req, res) => {
     const result = await pool.query(
       `SELECT time FROM checkins 
        WHERE stylist = $1 
-       AND time >= $2 AND time < $3
+       AND created_at >= $2 AND time < $3
        AND status = 'Waiting'`,
       [stylist, today.toISOString(), tomorrow.toISOString()]
     );
