@@ -32,16 +32,16 @@ app.get('/stylists', async (req, res) => {
 
 // Create check-in
 app.post('/checkin', async (req, res) => {
-  const { name, phone, service, stylist } = req.body;
-  console.log('New check-in:', { name, phone, service, stylist });
-
+  
+  
+  const { name, phone, service, stylist,time } = req.body;
+  console.log('New check-in:', { name, phone, service, stylist,time });
   try {
     const result = await pool.query(
-      `INSERT INTO checkins (name, phone, service, stylist) 
-       VALUES ($1, $2, $3, $4) 
-       RETURNING *`,
-      [name, phone, service, stylist]
-    );
+  `INSERT INTO checkins (name, phone, service, stylist, preferred_time) 
+   VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+  [name, phone, service, stylist, time]
+);
     res.json(result.rows[0]);
   } catch (err) {
     console.error('Error inserting check-in:', err);
@@ -148,47 +148,26 @@ app.get('/availability', async (req, res) => {
   }
 
   try {
-    // Define available slots from 9:00 AM to 6:00 PM in 30 min steps
-    const slots = [];
-    const start = new Date();
-    start.setHours(9, 0, 0, 0);
-    const end = new Date();
-    end.setHours(18, 0, 0, 0);
-
-    while (start < end) {
-      slots.push(start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-      start.setMinutes(start.getMinutes() + 30);
-    }
-
-    // Fetch times already booked for the stylist today
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const result = await pool.query(
-      `SELECT time FROM checkins 
-       WHERE stylist = $1 
-       AND created_at >= $2 AND time < $3
-       AND status = 'Waiting'`,
-      [stylist, today.toISOString(), tomorrow.toISOString()]
+    const allSlots = [
+      "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM", "11:00 AM",
+      "11:30 AM", "12:00 PM", "12:30 PM", "01:00 PM", "01:30 PM",
+      "02:00 PM", "02:30 PM", "03:00 PM", "03:30 PM", "04:00 PM",
+      "04:30 PM", "05:00 PM", "05:30 PM"
+    ];
+     const result = await pool.query(
+      `SELECT preferred_time FROM checkins WHERE stylist = $1 AND status = 'Waiting'`,
+      [stylist]
     );
+    const bookedTimes = result.rows.map(r => r.preferred_time);
 
-    const booked = result.rows.map(r => {
-      const time = new Date(r.time);
-      return time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    });
-
-    // Filter out booked slots
-    const available = slots.filter(t => !booked.includes(t));
-
-    res.json(available);
+    const availableTimes = allSlots.filter(slot => !bookedTimes.includes(slot));
+    
+        res.json(availableTimes);
   } catch (err) {
-    console.error('Error getting availability:', err);
+    console.error('Availability error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`✅ Backend running on port ${PORT}`));
