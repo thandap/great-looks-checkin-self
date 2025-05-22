@@ -116,8 +116,6 @@ export default function CheckIn() {
   </select>
 </div>
 
-
-
               <div>
                 <label htmlFor="stylist" className="block mb-1 font-medium text-gray-700">Preferred Stylist</label>
                 <select
@@ -145,7 +143,7 @@ export default function CheckIn() {
   className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#8F9779]"
   required
 />
-
+</div>
 
               <button
                 type="submit"
