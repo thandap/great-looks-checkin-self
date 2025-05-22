@@ -93,6 +93,22 @@ app.put('/checkins/:id', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// Add an endpoint to mark a check-in as Now Serving
+app.put('/checkins/:id/now-serving', async (req, res) => {
+  try {
+    await pool.query(
+      `UPDATE checkins SET status = 'Now Serving' WHERE id = $1`,
+      [req.params.id]
+    );
+    console.log(`Check-in ID ${req.params.id} marked as Now Serving`);
+    res.sendStatus(200);
+  } catch (err) {
+    console.error('Error updating to Now Serving:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Get available time slots for a given stylist
 app.get('/availability/:stylist', async (req, res) => {
   const { stylist } = req.params;
