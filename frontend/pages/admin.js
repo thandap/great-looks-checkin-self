@@ -14,79 +14,76 @@ export default function Admin() {
     }
   };
 
+  const markNowServing = async (id) => {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins/${id}/now-serving`, { method: 'PUT' });
+    fetchCheckins();
+  };
+
   const markServed = async (id) => {
-    try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins/${id}`, {
-        method: 'PUT',
-      });
-      fetchCheckins();
-    } catch (err) {
-      console.error('Error updating check-in:', err);
-    }
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins/${id}`, { method: 'PUT' });
+    fetchCheckins();
   };
 
   useEffect(() => {
     fetchCheckins();
   }, []);
 
+  const waiting = checkins.filter(c => c.status === 'Waiting');
+  const nowServing = checkins.filter(c => c.status === 'Now Serving');
+
   return (
     <>
       <NavBar />
       <main className="min-h-screen bg-gray-50 p-6" role="main">
         <section className="max-w-4xl mx-auto" aria-labelledby="admin-heading">
-          <h1 id="admin-heading" className="text-3xl font-bold text-gray-800 mb-6">
-            Waiting Queue
-          </h1>
+          <h1 id="admin-heading" className="text-3xl font-bold text-gray-800 mb-6">Admin Panel</h1>
 
-          {checkins.length === 0 ? (
-            <p className="text-gray-500">No customers waiting.</p>
+          {/* Waiting Queue */}
+          <h2 className="text-2xl font-semibold text-yellow-700 mb-4">⏳ Waiting Queue</h2>
+          {waiting.length === 0 ? (
+            <p className="text-gray-500 mb-6">No customers waiting.</p>
           ) : (
-           <ul className="space-y-4">
-  {checkins.map(({ id, name, phone, service, stylist, created_at }) => {
-    const waitMinutes = Math.floor((Date.now() - new Date(created_at)) / 60000);
+            <ul className="space-y-4 mb-8">
+              {waiting.map(item => (
+                <li key={item.id} className="bg-white p-4 rounded shadow">
+                  <p className="font-semibold text-lg">{item.name}</p>
+                  <p className="text-gray-600 text-sm">📞 {item.phone} | 💇 {item.service} | ✂️ {item.stylist}</p>
+                  <p className="text-sm text-gray-600">
+                    ⏳ Wait: {Math.floor((Date.now() - new Date(item.created_at)) / 60000)} min
+                  </p>
+                  <button
+                    onClick={() => markNowServing(item.id)}
+                    className="mt-2 px-4 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
+                  >
+                    Serve Now
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
 
-    return (
-      <li
-        key={id}
-        className="bg-white shadow-md rounded-lg p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center"
-        aria-label={`Check-in for ${name}`}
-      >
-        <div>
-          <p className="text-lg font-semibold text-gray-800">{name}</p>
-          <p className="text-gray-600">📞 {phone} | 💇 {service} | ✂️ {stylist}</p>
-          <p className="text-sm text-gray-500 mt-1">⏳ Wait: {waitMinutes} min</p>
-        </div>
-
-        <div className="flex flex-col gap-2 sm:mt-0 sm:ml-4 sm:flex-row">
-          <button
-            onClick={() => markServed(id)}
-            className="px-4 py-2 bg-[#8F9779] text-white rounded hover:bg-[#7b8569] transition"
-          >
-            Mark as Served
-          </button>
-
-          {/* 🔒 Placeholder: Invoice & Payment (Future Phase) */}
-          <div className="flex gap-2">
-            <button
-              disabled
-              title="Coming soon"
-              className="px-3 py-1 bg-indigo-500 text-white text-sm rounded opacity-60 cursor-not-allowed"
-            >
-              🧾 Invoice
-            </button>
-            <button
-              disabled
-              title="Coming soon"
-              className="px-3 py-1 bg-green-600 text-white text-sm rounded opacity-60 cursor-not-allowed"
-            >
-              💳 Pay
-            </button>
-          </div>
-        </div>
-      </li>
-    );
-  })}
-</ul>
+          {/* Now Serving */}
+          <h2 className="text-2xl font-semibold text-green-700 mb-4">✅ Now Serving</h2>
+          {nowServing.length === 0 ? (
+            <p className="text-gray-500">No one is currently being served.</p>
+          ) : (
+            <ul className="space-y-4">
+              {nowServing.map(item => (
+                <li key={item.id} className="bg-green-100 border border-green-400 p-4 rounded shadow">
+                  <p className="font-semibold text-lg">{item.name}</p>
+                  <p className="text-gray-600 text-sm">📞 {item.phone} | 💇 {item.service} | ✂️ {item.stylist}</p>
+                  <p className="text-sm text-gray-600">
+                    ⏳ Wait: {Math.floor((Date.now() - new Date(item.created_at)) / 60000)} min
+                  </p>
+                  <button
+                    onClick={() => markServed(item.id)}
+                    className="mt-2 px-4 py-1 bg-[#8F9779] text-white rounded hover:bg-[#7b8569]"
+                  >
+                    Mark as Served
+                  </button>
+                </li>
+              ))}
+            </ul>
           )}
         </section>
       </main>
