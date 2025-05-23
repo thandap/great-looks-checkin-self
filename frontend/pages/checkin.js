@@ -4,7 +4,7 @@ import NavBar from '../components/NavBar';
 
 export default function CheckIn() {
   const router = useRouter();
-  const [formData, setFormData] = useState({ name: '', phone: '', stylist: '', time: '' });
+  const [formData, setFormData] = useState({ name: '', phone: '', stylist: '', time: '', notes: '' });
   const [stylists, setStylists] = useState([]);
   const [services, setServices] = useState([]);
   const [selectedServices, setSelectedServices] = useState([]);
@@ -71,6 +71,7 @@ export default function CheckIn() {
       const finalForm = {
         ...formData,
         service: selectedServices.map(s => s.name).join(', '),
+        notes: formData.notes || '',
         checkInMethod: 'online'
       };
 
@@ -111,6 +112,13 @@ export default function CheckIn() {
           <h1 className="text-3xl font-serif text-center text-black mb-6">Check In Online</h1>
           {!submitted ? (
             <form onSubmit={handleSubmit} className="space-y-5">
+              <textarea
+                name="notes"
+                placeholder="Notes (e.g., style preference, requests)"
+                value={formData.notes || ''}
+                onChange={handleChange}
+                className="w-full border rounded-md px-4 py-2"
+              />
               <input name="email" placeholder="Email (optional)" value={formData.email || ''} onChange={handleChange} className="w-full border rounded-md px-4 py-2" />
               <input name="name" required placeholder="Name" value={formData.name} onChange={handleChange} className="w-full border rounded-md px-4 py-2" />
               <div>
@@ -151,6 +159,9 @@ export default function CheckIn() {
   <p>🌐 Online check-ins ahead: <strong>{onlineCount}</strong></p>
   <p>💲 Estimated Total: <strong>${totalPrice.toFixed(2)}</strong></p>
   <p>⏱ Total Time: <strong>{totalDuration} minutes</strong></p>
+   {formData.notes && (
+  <p>📝 Notes: <em>{formData.notes}</em></p>
+)}             
 </div>
             </>
           )}
@@ -159,3 +170,4 @@ export default function CheckIn() {
     </>
   );
 }
+
