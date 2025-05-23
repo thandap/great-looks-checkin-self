@@ -55,13 +55,13 @@ app.get('/checkins', async (req, res) => {
     const result = await pool.query(
       `SELECT id, name, stylist, service, status, created_at
 FROM checkins
-WHERE status in('Waiting','Now Serving'
+WHERE status in('Waiting','Now Serving')
 ORDER BY created_at ASC`
     );
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching check-ins:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message }); // ✅ Return an empty array on failure
   }
 });
 // Get list of active services
