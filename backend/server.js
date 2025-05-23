@@ -33,13 +33,13 @@ app.get('/stylists', async (req, res) => {
 
 // Create check-in
 app.post('/checkin', async (req, res) => {
-  const { name, phone, service, stylist, time } = req.body;
+  const { name, phone, service, stylist, time,notes } = req.body;
   console.log('New check-in:', { name, phone, service, stylist, time });
   try {
     const result = await pool.query(
-      `INSERT INTO checkins (name, phone, service, stylist, preferred_time) 
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [name, phone, service, stylist, time]
+      `INSERT INTO checkins (name, phone, service, stylist, preferred_time, notes) 
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [name, phone, service, stylist, time, notes]
     );
     const checkin = result.rows[0];
     // Send confirmation email if email is provided
