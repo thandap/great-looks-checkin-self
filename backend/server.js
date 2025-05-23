@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 require('dotenv').config();
+const sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const app = express();
 app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
@@ -39,7 +41,32 @@ app.post('/checkin', async (req, res) => {
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
       [name, phone, service, stylist, time]
     );
-    res.json(result.rows[0]);
+    const checkin = result.rows[0];
+    // Send confirmation email if email is provided
+    if (req.body.email) {
+      const msg = {
+        to: req.body.email,
+        from: 'checkin@greatlooks.com',
+        subject: 'Your Great Looks Check-In Confirmation',
+        text: `Hi ${req.body.name},
+
+You've successfully checked in at Great Looks.
+
+Stylist: ${req.body.stylist}
+Services: ${req.body.service}
+
+We’ll notify you when you're next.
+
+Thanks for choosing us!`,
+      };
+      try {
+        await sgMail.send(msg);
+        console.log(`📧 Confirmation email sent to ${req.body.email}`);
+      } catch (emailErr) {
+        console.error('Error sending confirmation email:', emailErr);
+      }
+    }
+    res.json(checkin);
   } catch (err) {
     console.error('Error inserting check-in:', err);
     res.status(500).json({ error: err.message });
