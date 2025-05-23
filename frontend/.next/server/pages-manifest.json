@@ -2,8 +2,6 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/checkin": "pages/checkin.js",
-  "/services": "pages/services.js",
-  "/admin": "pages/admin.js",
-  "/admin-services": "pages/admin-services.js"
+  "/": "pages/index.js",
+  "/checkin": "pages/checkin.js"
 }
