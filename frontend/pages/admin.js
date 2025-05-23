@@ -30,15 +30,18 @@ export default function Admin() {
 
   const waiting = checkins.filter(c => c.status === 'Waiting');
   const nowServing = checkins.filter(c => c.status === 'Now Serving');
+  const inShop = waiting.filter(c => c.checkin_method === 'in_person');
+  const online = waiting.filter(c => c.checkin_method === 'online');
 
   return (
     <>
       <NavBar />
-      <main className="min-h-screen bg-gray-50 p-6" role="main">
-        <section className="max-w-4xl mx-auto" aria-labelledby="admin-heading">
-          <h1 id="admin-heading" className="text-3xl font-bold text-gray-800 mb-6">Admin Panel</h1>
+      <main className="min-h-screen bg-gray-50 p-6">
+        <section className="max-w-4xl mx-auto">
+          <h1 className="text-3xl font-bold text-gray-800 mb-6">Admin Panel</h1>
 
-          {/* Waiting Queue */}
+          <p className="mb-4 text-gray-700">Total Waiting: {waiting.length} | In-Shop: {inShop.length} | Online: {online.length}</p>
+
           <h2 className="text-2xl font-semibold text-yellow-700 mb-4">⏳ Waiting Queue</h2>
           {waiting.length === 0 ? (
             <p className="text-gray-500 mb-6">No customers waiting.</p>
@@ -48,21 +51,13 @@ export default function Admin() {
                 <li key={item.id} className="bg-white p-4 rounded shadow">
                   <p className="font-semibold text-lg">{item.name}</p>
                   <p className="text-gray-600 text-sm">📞 {item.phone} | 💇 {item.service} | ✂️ {item.stylist}</p>
-                  <p className="text-sm text-gray-600">
-                    ⏳ Wait: {Math.floor((Date.now() - new Date(item.created_at)) / 60000)} min
-                  </p>
-                  <button
-                    onClick={() => markNowServing(item.id)}
-                    className="mt-2 px-4 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
-                  >
-                    Serve Now
-                  </button>
+                  <p className="text-sm text-gray-600">⏳ Wait: {Math.floor((Date.now() - new Date(item.created_at)) / 60000)} min</p>
+                  <button onClick={() => markNowServing(item.id)} className="mt-2 px-4 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500">Serve Now</button>
                 </li>
               ))}
             </ul>
           )}
 
-          {/* Now Serving */}
           <h2 className="text-2xl font-semibold text-green-700 mb-4">✅ Now Serving</h2>
           {nowServing.length === 0 ? (
             <p className="text-gray-500">No one is currently being served.</p>
@@ -72,15 +67,8 @@ export default function Admin() {
                 <li key={item.id} className="bg-green-100 border border-green-400 p-4 rounded shadow">
                   <p className="font-semibold text-lg">{item.name}</p>
                   <p className="text-gray-600 text-sm">📞 {item.phone} | 💇 {item.service} | ✂️ {item.stylist}</p>
-                  <p className="text-sm text-gray-600">
-                    ⏳ Wait: {Math.floor((Date.now() - new Date(item.created_at)) / 60000)} min
-                  </p>
-                  <button
-                    onClick={() => markServed(item.id)}
-                    className="mt-2 px-4 py-1 bg-[#8F9779] text-white rounded hover:bg-[#7b8569]"
-                  >
-                    Mark as Served
-                  </button>
+                  <p className="text-sm text-gray-600">⏳ Wait: {Math.floor((Date.now() - new Date(item.created_at)) / 60000)} min</p>
+                  <button onClick={() => markServed(item.id)} className="mt-2 px-4 py-1 bg-[#8F9779] text-white rounded hover:bg-[#7b8569]">Mark as Served</button>
                 </li>
               ))}
             </ul>
