@@ -8,10 +8,14 @@ export default function CheckIn() {
   const [stylists, setStylists] = useState([]);
   const [services, setServices] = useState([]);
   const [selectedServices, setSelectedServices] = useState([]);
+  const totalPrice = selectedServices.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
+  const totalDuration = selectedServices.reduce((sum, s) => sum + (s.duration || 0), 0);
   const [availableTimes, setAvailableTimes] = useState([]);
   const [submitted, setSubmitted] = useState(false);
   const [estimatedWait, setEstimatedWait] = useState(null);
   const [positionInLine, setPositionInLine] = useState(null);
+  const [walkInCount, setWalkInCount] = useState(0);
+  const [onlineCount, setOnlineCount] = useState(0);
   const [errors, setErrors] = useState({ phone: '' });
   const [loading, setLoading] = useState(false);
 
@@ -31,18 +35,7 @@ export default function CheckIn() {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    if (!formData.stylist) return;
-    const fetchTimes = async () => {
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/availability?stylist=${formData.stylist}`);
-        setAvailableTimes(await res.json());
-      } catch (err) {
-        console.error('Failed to load availability:', err);
-      }
-    };
-    fetchTimes();
-  }, [formData.stylist]);
+  
 
   const validatePhone = (phone) => {
     const phonePattern = /^\d{10}$/;
@@ -97,7 +90,11 @@ export default function CheckIn() {
       );
 
       setEstimatedWait(waitingAhead.length * 15);
-      setPositionInLine(waitingAhead.length + 1); 
+      const onlineAhead = waitingAhead.filter(c => c.checkinmethod === 'online');
+      const walkinAhead = waitingAhead.length - onlineAhead.length;
+      setPositionInLine(waitingAhead.length + 1);
+      setWalkInCount(walkinAhead);
+      setOnlineCount(onlineAhead.length); 
       setSubmitted(true);
     } catch (error) {
       console.error('Check-in failed:', error);
@@ -114,6 +111,7 @@ export default function CheckIn() {
           <h1 className="text-3xl font-serif text-center text-black mb-6">Check In Online</h1>
           {!submitted ? (
             <form onSubmit={handleSubmit} className="space-y-5">
+              <input name="email" placeholder="Email (optional)" value={formData.email || ''} onChange={handleChange} className="w-full border rounded-md px-4 py-2" />
               <input name="name" required placeholder="Name" value={formData.name} onChange={handleChange} className="w-full border rounded-md px-4 py-2" />
               <div>
                 <input name="phone" required placeholder="Phone (10 digits)" value={formData.phone} onChange={handleChange} className="w-full border rounded-md px-4 py-2" />
@@ -123,19 +121,19 @@ export default function CheckIn() {
                 {services.map(({ id, name, price, duration }) => (
                   <label key={id} className="block text-sm">
                     <input type="checkbox" value={name} checked={selectedServices.some(s => s.name === name)} onChange={handleServiceCheck} className="mr-2" />
-                    {name} - ${typeof price === 'number' ? price.toFixed(2) : '—'} ({duration || '--'} min)
+                    {name} - ${!isNaN(price) ? Number(price).toFixed(2) : '—'} ({duration || '--'} min)
                   </label>
                 ))}
+              </div>
+              <div className="text-sm text-gray-700 mt-2">
+                💲 Estimated Total: <strong>${totalPrice.toFixed(2)}</strong><br />
+                ⏱ Total Time: <strong>{totalDuration} minutes</strong>
               </div>
               <select name="stylist" required value={formData.stylist} onChange={handleChange} className="w-full border rounded-md px-4 py-2">
                 <option value="">Select Stylist</option>
                 {stylists.map(({ id, name }) => <option key={id} value={name}>{name}</option>)}
               </select>
-              <select name="time" required value={formData.time} onChange={handleChange} className="w-full border rounded-md px-4 py-2">
-                <option value="">Select Time</option>
-                {Array.isArray(availableTimes) && availableTimes.map((t, idx) => <option key={idx} value={t}>{t}</option>)}
-              </select>
-              <button type="submit" disabled={loading} className={`w-full py-2 rounded-md text-white ${loading ? 'bg-gray-400' : 'bg-[#8F9779] hover:bg-[#7b8569]'}`}>
+                            <button type="submit" disabled={loading} className={`w-full py-2 rounded-md text-white ${loading ? 'bg-gray-400' : 'bg-[#8F9779] hover:bg-[#7b8569]'}`}>
                 {loading ? 'Checking In...' : 'Check In'}
               </button>
             </form>
@@ -144,11 +142,16 @@ export default function CheckIn() {
               <h2 className="text-center text-green-600 text-xl font-medium" role="status">
                 ✅ Thank you, {formData.name}!
               </h2>
-              <div className="text-center text-gray-700 mt-2 space-y-2">
-                <p>✂️ Stylist: <strong>{formData.stylist}</strong></p>
-                <p>🕒 Estimated Wait: <strong>{estimatedWait} minutes</strong></p>
-                <p>🎟️ You are approximately <strong>#{positionInLine}</strong> in line.</p>
-              </div>
+              <div className="text-center text-gray-700 mt-2 space-y-2 bg-green-50 border border-green-300 rounded-lg p-4 shadow">
+  <p className="text-lg font-semibold text-green-800">Your Check-In Summary</p>
+  <p>✂️ Stylist: <strong>{formData.stylist}</strong></p>
+  <p>🕒 Estimated Wait: <strong>{estimatedWait} minutes</strong></p>
+  <p>🎟️ Position in line: <strong>#{positionInLine}</strong></p>
+  <p>🏃‍♂️ Walk-ins ahead: <strong>{walkInCount}</strong></p>
+  <p>🌐 Online check-ins ahead: <strong>{onlineCount}</strong></p>
+  <p>💲 Estimated Total: <strong>${totalPrice.toFixed(2)}</strong></p>
+  <p>⏱ Total Time: <strong>{totalDuration} minutes</strong></p>
+</div>
             </>
           )}
         </section>
