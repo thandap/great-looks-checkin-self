@@ -123,7 +123,7 @@ export default function CheckIn() {
                 {services.map(({ id, name, price, duration }) => (
                   <label key={id} className="block text-sm">
                     <input type="checkbox" value={name} checked={selectedServices.some(s => s.name === name)} onChange={handleServiceCheck} className="mr-2" />
-                    {name} - ${price} ({duration} min)
+                    {name} - ${price?.toFixed(2) || '—'} ({duration || '--'} min)
                   </label>
                 ))}
               </div>

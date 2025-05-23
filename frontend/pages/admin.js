@@ -1,88 +1,90 @@
 import { useEffect, useState } from 'react';
 import NavBar from '../components/NavBar';
 
-export default function AdminServices() {
-  const [services, setServices] = useState([]);
-  const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ price: '', duration: '' });
+export default function AdminPanel() {
+  const [checkins, setCheckins] = useState([]);
 
-  useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/services`)
-      .then(res => res.json())
-      .then(setServices)
-      .catch(err => console.error('Error loading services:', err));
-  }, []);
-
-  const handleEdit = (service) => {
-    setEditing(service.id);
-    setForm({ price: service.price, duration: service.duration });
-  };
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSave = async (id) => {
+  const fetchCheckins = async () => {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/services/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-      const updated = services.map(s =>
-        s.id === id ? { ...s, price: form.price, duration: form.duration } : s
-      );
-      setServices(updated);
-      setEditing(null);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins`);
+      const data = await res.json();
+      setCheckins(data);
     } catch (err) {
-      console.error('Failed to update service:', err);
+      console.error('Error fetching check-ins:', err);
     }
   };
+
+  const markNowServing = async (id) => {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins/${id}/now-serving`, { method: 'PUT' });
+    fetchCheckins();
+  };
+
+  const markServed = async (id) => {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins/${id}`, { method: 'PUT' });
+    fetchCheckins();
+  };
+
+  useEffect(() => {
+    fetchCheckins();
+  }, []);
+
+  const waiting = Array.isArray(checkins) ? checkins.filter(c => c.status === 'Waiting') : [];
+  const nowServing = Array.isArray(checkins) ? checkins.filter(c => c.status === 'Now Serving') : [];
 
   return (
     <>
       <NavBar />
-      <main className="min-h-screen bg-gray-50 p-6">
-        <section className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold text-gray-800 mb-6">Manage Services</h1>
-          <table className="w-full table-auto border border-gray-300">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border px-4 py-2">Service</th>
-                <th className="border px-4 py-2">Price ($)</th>
-                <th className="border px-4 py-2">Duration (min)</th>
-                <th className="border px-4 py-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {services.map(service => (
-                <tr key={service.id}>
-                  <td className="border px-4 py-2">{service.name}</td>
-                  <td className="border px-4 py-2">
-                    {editing === service.id ? (
-                      <input name="price" type="number" value={form.price} onChange={handleChange} className="w-full border px-2" />
-                    ) : (
-                      `$${service.price}`
-                    )}
-                  </td>
-                  <td className="border px-4 py-2">
-                    {editing === service.id ? (
-                      <input name="duration" type="number" value={form.duration} onChange={handleChange} className="w-full border px-2" />
-                    ) : (
-                      `${service.duration} min`
-                    )}
-                  </td>
-                  <td className="border px-4 py-2 text-center">
-                    {editing === service.id ? (
-                      <button onClick={() => handleSave(service.id)} className="bg-green-500 text-white px-3 py-1 rounded">Save</button>
-                    ) : (
-                      <button onClick={() => handleEdit(service)} className="bg-blue-500 text-white px-3 py-1 rounded">Edit</button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <main className="min-h-screen bg-gray-50 p-6" role="main">
+        <section className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h2 className="text-2xl font-semibold text-yellow-700 mb-4">⏳ Waiting Queue</h2>
+            {waiting.length === 0 ? (
+              <p className="text-gray-500 mb-6">No customers waiting.</p>
+            ) : (
+              <ul className="space-y-4 mb-8">
+                {waiting.map(item => (
+                  <li key={item.id} className="bg-white p-4 rounded shadow">
+                    <p className="font-semibold text-lg">{item.name}</p>
+                    <p className="text-gray-600 text-sm">📞 {item.phone} | 💇 {item.service} | ✂️ {item.stylist}</p>
+                    <p className="text-sm text-gray-600">
+                      ⏳ Wait: {Math.floor((Date.now() - new Date(item.created_at)) / 60000)} min
+                    </p>
+                    <button
+                      onClick={() => markNowServing(item.id)}
+                      className="mt-2 px-4 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
+                    >
+                      Serve Now
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div>
+            <h2 className="text-2xl font-semibold text-green-700 mb-4">✅ Now Serving</h2>
+            {nowServing.length === 0 ? (
+              <p className="text-gray-500">No one is currently being served.</p>
+            ) : (
+              <ul className="space-y-4">
+                {nowServing.map(item => (
+                  <li key={item.id} className="bg-green-100 border border-green-400 p-4 rounded shadow">
+                    <p className="font-semibold text-lg">{item.name}</p>
+                    <p className="text-gray-600 text-sm">📞 {item.phone} | 💇 {item.service} | ✂️ {item.stylist}</p>
+                    <p className="text-sm text-gray-600">
+                      🕒 Checked in {Math.floor((Date.now() - new Date(item.created_at)) / 60000)} min ago
+                    </p>
+                    <button
+                      onClick={() => markServed(item.id)}
+                      className="mt-2 px-4 py-1 bg-[#8F9779] text-white rounded hover:bg-[#7b8569]"
+                    >
+                      Mark as Served
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </section>
       </main>
     </>

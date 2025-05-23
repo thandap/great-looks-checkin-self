@@ -9,8 +9,7 @@ export default function NavBar() {
     { name: 'Check In', path: '/checkin' },
     { name: 'Services', path: '/services' },
     { name: 'About', path: '/about' },
-    { name: 'Contact', path: '/contact' },
-    { name: 'Admin', path: '/admin' }
+    { name: 'Contact', path: '/contact' }
   ];
 
   return (
@@ -19,7 +18,7 @@ export default function NavBar() {
         <Link href="/" className="text-3xl font-extrabold tracking-tight text-yellow-400">
           Great Looks
         </Link>
-        <div className="flex gap-6 text-lg">
+        <div className="flex gap-6 text-lg items-center">
           {navItems.map((item) => (
             <Link
               key={item.name}
@@ -33,6 +32,19 @@ export default function NavBar() {
               {item.name}
             </Link>
           ))}
+          <div className="relative group">
+            <span className="cursor-pointer pb-1 border-b-2 border-transparent group-hover:border-yellow-300">
+              Admin
+            </span>
+            <div className="absolute hidden group-hover:block bg-black mt-2 shadow-lg rounded p-2 space-y-1 z-10">
+              <Link href="/admin" className="block text-sm hover:text-yellow-300">
+                Admin Panel
+              </Link>
+              <Link href="/admin-services" className="block text-sm hover:text-yellow-300">
+                Manage Services
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </nav>
