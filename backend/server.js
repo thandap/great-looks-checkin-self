@@ -55,7 +55,7 @@ app.get('/checkins', async (req, res) => {
     const result = await pool.query(
       `SELECT id, name, stylist, service, status, created_at
 FROM checkins
-WHERE status = 'Waiting'
+WHERE status in('Waiting','Now Serving'
 ORDER BY created_at ASC`
     );
     res.json(result.rows);
@@ -77,23 +77,6 @@ app.get('/services', async (req, res) => {
   }
 });
 
-// Mark check-in as served
-app.put('/checkins/:id', async (req, res) => {
-  try {
-    await pool.query(
-      `UPDATE checkins 
-       SET status = 'Served' 
-       WHERE id = $1`,
-      [req.params.id]
-    );
-    console.log(`Check-in ID ${req.params.id} marked as served`);
-    res.sendStatus(200);
-  } catch (err) {
-    console.error('Error updating check-in:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // Add an endpoint to mark a check-in as Now Serving
 app.put('/checkins/:id/now-serving', async (req, res) => {
   try {
@@ -101,10 +84,24 @@ app.put('/checkins/:id/now-serving', async (req, res) => {
       `UPDATE checkins SET status = 'Now Serving' WHERE id = $1`,
       [req.params.id]
     );
-    console.log(`Check-in ID ${req.params.id} marked as Now Serving`);
+    console.log(`✅ Check-in ID ${req.params.id} marked as Now Serving`);
     res.sendStatus(200);
   } catch (err) {
-    console.error('Error updating to Now Serving:', err);
+    console.error('Error updating check-in to Now Serving:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+// Mark check-in as served
+app.put('/checkins/:id', async (req, res) => {
+  try {
+    await pool.query(
+      `UPDATE checkins SET status = 'Served' WHERE id = $1`,
+      [req.params.id]
+    );
+    console.log(`✅ Check-in ID ${req.params.id} marked as Served`);
+    res.sendStatus(200);
+  } catch (err) {
+    console.error('Error updating check-in to Served:', err);
     res.status(500).json({ error: err.message });
   }
 });
