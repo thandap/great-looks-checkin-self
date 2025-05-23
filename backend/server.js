@@ -46,7 +46,7 @@ app.post('/checkin', async (req, res) => {
     if (req.body.email) {
       const msg = {
         to: req.body.email,
-        from: 'checkin@greatlooks.com',
+        from: 'thandap@gmail.com',
         subject: 'Your Great Looks Check-In Confirmation',
         text: `Hi ${req.body.name},
 
