@@ -37,11 +37,12 @@ export default function Admin() {
     <>
       <NavBar />
       <main className="min-h-screen bg-gray-50 p-6">
-        <section className="max-w-4xl mx-auto">
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <h1 className="text-3xl font-bold text-gray-800 mb-6">Admin Panel</h1>
 
           <p className="mb-4 text-gray-700">Total Waiting: {waiting.length} | In-Shop: {inShop.length} | Online: {online.length}</p>
 
+<div>
           <h2 className="text-2xl font-semibold text-yellow-700 mb-4">⏳ Waiting Queue</h2>
           {waiting.length === 0 ? (
             <p className="text-gray-500 mb-6">No customers waiting.</p>
@@ -57,7 +58,8 @@ export default function Admin() {
               ))}
             </ul>
           )}
-
+</div>
+<div>
           <h2 className="text-2xl font-semibold text-green-700 mb-4">✅ Now Serving</h2>
           {nowServing.length === 0 ? (
             <p className="text-gray-500">No one is currently being served.</p>
@@ -67,12 +69,13 @@ export default function Admin() {
                 <li key={item.id} className="bg-green-100 border border-green-400 p-4 rounded shadow">
                   <p className="font-semibold text-lg">{item.name}</p>
                   <p className="text-gray-600 text-sm">📞 {item.phone} | 💇 {item.service} | ✂️ {item.stylist}</p>
-                  <p className="text-sm text-gray-600">⏳ Wait: {Math.floor((Date.now() - new Date(item.created_at)) / 60000)} min</p>
+                  <p className="text-sm text-gray-600">🕒 Checked in {Math.floor((Date.now() - new Date(item.created_at)) / 60000)} min ago</p>
                   <button onClick={() => markServed(item.id)} className="mt-2 px-4 py-1 bg-[#8F9779] text-white rounded hover:bg-[#7b8569]">Mark as Served</button>
                 </li>
               ))}
             </ul>
           )}
+   </div>       
         </section>
       </main>
     </>
