@@ -11,6 +11,9 @@ export default function CheckIn() {
   const [availableTimes, setAvailableTimes] = useState([]);
   const [submitted, setSubmitted] = useState(false);
   const [estimatedWait, setEstimatedWait] = useState(null);
+  const [positionInLine, setPositionInLine] = useState(null);
+  const [errors, setErrors] = useState({ phone: '' });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,19 +44,40 @@ export default function CheckIn() {
     fetchTimes();
   }, [formData.stylist]);
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const validatePhone = (phone) => {
+    const phonePattern = /^\d{10}$/;
+    return phonePattern.test(phone);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'phone') {
+      setErrors(prev => ({ ...prev, phone: validatePhone(value) ? '' : 'Phone number must be 10 digits' }));
+    }
+  };
 
   const handleServiceCheck = (e) => {
     const { value, checked } = e.target;
-    setSelectedServices(prev => checked ? [...prev, value] : prev.filter(s => s !== value));
+    if (checked) {
+      const serviceObj = services.find(s => s.name === value);
+      setSelectedServices(prev => [...prev, serviceObj]);
+    } else {
+      setSelectedServices(prev => prev.filter(s => s.name !== value));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validatePhone(formData.phone)) {
+      setErrors(prev => ({ ...prev, phone: 'Phone number must be 10 digits' }));
+      return;
+    }
     try {
+      setLoading(true);
       const finalForm = {
         ...formData,
-        service: selectedServices.join(', '),
+        service: selectedServices.map(s => s.name).join(', '),
         checkInMethod: 'online'
       };
 
@@ -73,9 +97,12 @@ export default function CheckIn() {
       );
 
       setEstimatedWait(waitingAhead.length * 15);
+      setPositionInLine(waitingAhead.length + 1); 
       setSubmitted(true);
     } catch (error) {
       console.error('Check-in failed:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -88,12 +115,15 @@ export default function CheckIn() {
           {!submitted ? (
             <form onSubmit={handleSubmit} className="space-y-5">
               <input name="name" required placeholder="Name" value={formData.name} onChange={handleChange} className="w-full border rounded-md px-4 py-2" />
-              <input name="phone" required placeholder="Phone" value={formData.phone} onChange={handleChange} className="w-full border rounded-md px-4 py-2" />
               <div>
-                {services.map(({ id, name }) => (
-                  <label key={id} className="block">
-                    <input type="checkbox" value={name} checked={selectedServices.includes(name)} onChange={handleServiceCheck} className="mr-2" />
-                    {name}
+                <input name="phone" required placeholder="Phone (10 digits)" value={formData.phone} onChange={handleChange} className="w-full border rounded-md px-4 py-2" />
+                {errors.phone && <p className="text-sm text-red-600 mt-1">{errors.phone}</p>}
+              </div>
+              <div>
+                {services.map(({ id, name, price, duration }) => (
+                  <label key={id} className="block text-sm">
+                    <input type="checkbox" value={name} checked={selectedServices.some(s => s.name === name)} onChange={handleServiceCheck} className="mr-2" />
+                    {name} - ${price} ({duration} min)
                   </label>
                 ))}
               </div>
@@ -105,12 +135,20 @@ export default function CheckIn() {
                 <option value="">Select Time</option>
                 {Array.isArray(availableTimes) && availableTimes.map((t, idx) => <option key={idx} value={t}>{t}</option>)}
               </select>
-              <button type="submit" className="w-full bg-[#8F9779] text-white py-2 rounded-md">Check In</button>
+              <button type="submit" disabled={loading} className={`w-full py-2 rounded-md text-white ${loading ? 'bg-gray-400' : 'bg-[#8F9779] hover:bg-[#7b8569]'}`}>
+                {loading ? 'Checking In...' : 'Check In'}
+              </button>
             </form>
           ) : (
             <>
-              <h2 className="text-center text-green-600 text-xl font-medium">✅ Thank you! Your check-in has been received.</h2>
-              <p className="text-center text-gray-700 mt-2">🕒 Your wait time is approx {estimatedWait} minutes.</p>
+              <h2 className="text-center text-green-600 text-xl font-medium" role="status">
+                ✅ Thank you, {formData.name}!
+              </h2>
+              <div className="text-center text-gray-700 mt-2 space-y-2">
+                <p>✂️ Stylist: <strong>{formData.stylist}</strong></p>
+                <p>🕒 Estimated Wait: <strong>{estimatedWait} minutes</strong></p>
+                <p>🎟️ You are approximately <strong>#{positionInLine}</strong> in line.</p>
+              </div>
             </>
           )}
         </section>
