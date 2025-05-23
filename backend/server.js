@@ -66,7 +66,7 @@ app.get('/checkins', async (req, res) => {
 app.get('/services', async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT id, name FROM services WHERE is_active = true ORDER BY name`
+      `SELECT id, name, price, duration FROM services WHERE is_active = true ORDER BY name`
     );
     res.json(result.rows);
   } catch (err) {
