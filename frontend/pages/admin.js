@@ -3,21 +3,29 @@ import NavBar from '../components/NavBar';
 
 function StylistNotes({ item }) {
   const [note, setNote] = useState('');
+  const [noteType, setNoteType] = useState('stylist');
+  const [createdBy, setCreatedBy] = useState('Admin');
   const [loading, setLoading] = useState(true);
   const [previousNote, setPreviousNote] = useState('');
   const [noteTimestamp, setNoteTimestamp] = useState(null);
+  const [history, setHistory] = useState([]);
 
   useEffect(() => {
     const fetchNote = async () => {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stylist-notes/${item.phone}/${item.stylist}`);
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
-          const stylistNote = data.find(n => n.note_type === 'stylist');
-          if (stylistNote) {
-            setNote(stylistNote.note_text);
-            setPreviousNote(stylistNote.note_text);
-            setNoteTimestamp(stylistNote.created_at);
+        if (Array.isArray(data)) {
+          setHistory(data);
+          const latest = data.find(n => n.note_type === noteType);
+          if (latest) {
+            setNote(latest.note_text);
+            setPreviousNote(latest.note_text);
+            setNoteTimestamp(latest.created_at);
+          } else {
+            setNote('');
+            setPreviousNote('');
+            setNoteTimestamp(null);
           }
         }
       } catch (err) {
@@ -28,7 +36,7 @@ function StylistNotes({ item }) {
     };
 
     fetchNote();
-  }, [item.phone, item.stylist]);
+  }, [item.phone, item.stylist, noteType]);
 
   const handleBlur = async () => {
     const clean = note.trim();
@@ -37,7 +45,7 @@ function StylistNotes({ item }) {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins/${item.id}/stylist-notes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ notes: clean })
+        body: JSON.stringify({ notes: clean, note_type: noteType, created_by: createdBy })
       });
       if (res.ok) {
         setPreviousNote(clean);
@@ -51,21 +59,52 @@ function StylistNotes({ item }) {
 
   return (
     <div className="mt-2">
+      <div className="flex items-center gap-4 mb-2">
+        <select
+          value={noteType}
+          onChange={(e) => setNoteType(e.target.value)}
+          className="text-sm border rounded p-1"
+        >
+          <option value="stylist">Stylist Note</option>
+          <option value="admin">Admin Note</option>
+        </select>
+        <input
+          type="text"
+          value={createdBy}
+          onChange={e => setCreatedBy(e.target.value)}
+          placeholder="Your name"
+          className="text-sm border rounded p-1 w-32"
+        />
+      </div>
       <textarea
         value={note}
         disabled={loading}
         className="w-full border mt-1 rounded p-2 text-sm focus:bg-white bg-gray-50 transition-colors"
-        placeholder="Stylist notes (tools used, preferences, etc.)"
+        placeholder={`Enter ${noteType} note here...`}
         onChange={e => setNote(e.target.value)}
         onBlur={handleBlur}
       ></textarea>
       {noteTimestamp && (
         <p className="text-xs text-gray-400">Last updated: {new Date(noteTimestamp).toLocaleString()}</p>
       )}
+      {history.length > 0 && (
+        <div className="mt-3 text-sm">
+          <p className="font-semibold mb-1 text-gray-700">📜 Note History:</p>
+          <ul className="space-y-1">
+            {history.map((entry, idx) => (
+              <li key={idx} className={`p-2 rounded border-l-4 ${entry.note_type === 'admin' ? 'bg-red-50 border-red-400' : 'bg-green-50 border-green-400'}`}>
+                <div className="text-xs text-gray-500 mb-1">
+                  <strong>{entry.note_type.toUpperCase()}</strong> by {entry.created_by || 'Unknown'} at {new Date(entry.created_at).toLocaleString()}
+                </div>
+                <div className="text-gray-800">{entry.note_text}</div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
-
 export default function Admin() {
   const [checkins, setCheckins] = useState([]);
 
