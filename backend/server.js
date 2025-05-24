@@ -124,7 +124,7 @@ app.get('/stylist-notes/:phone/:stylist', async (req, res) => {
 app.get('/checkins', async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT id, name, stylist, service, status, created_at
+      `SELECT id, name, stylist, service, status, created_at, phone, notes
        FROM checkins
        WHERE status IN ('Waiting','Now Serving')
        ORDER BY created_at ASC`
@@ -135,6 +135,7 @@ app.get('/checkins', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // Get list of active services
 app.get('/services', async (req, res) => {
