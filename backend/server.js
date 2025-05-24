@@ -72,6 +72,53 @@ Thanks for choosing us!`,
     res.status(500).json({ error: err.message });
   }
 });
+//stylist-notes
+app.post('/checkins/:id/stylist-notes', async (req, res) => {
+  const { notes } = req.body;
+  const checkinId = req.params.id;
+
+  try {
+    // Get phone, stylist, email, and service from checkin
+    const result = await pool.query(
+      `SELECT phone, stylist, email, service FROM checkins WHERE id = $1`,
+      [checkinId]
+    );
+
+    const { phone, stylist, email, service } = result.rows[0];
+
+    await pool.query(
+      `INSERT INTO stylist_notes (phone, email, stylist, service, notes)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [phone, email || null, stylist, service, notes]
+    );
+
+    res.sendStatus(200);
+  } catch (err) {
+    console.error('Error saving stylist note:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/stylist-notes/:phone/:stylist', async (req, res) => {
+  const { phone, stylist } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT notes FROM stylist_notes
+       WHERE phone = $1 AND stylist = $2
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [phone, stylist]
+    );
+
+    res.json(result.rows[0] || {});
+  } catch (err) {
+    console.error('Error fetching stylist notes:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 
 // Get waiting check-ins
 app.get('/checkins', async (req, res) => {
