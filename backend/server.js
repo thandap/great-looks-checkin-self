@@ -78,6 +78,23 @@ app.post('/checkins/:id/stylist-notes', async (req, res) => {
   const checkinId = req.params.id;
 
   try {
+    const result = await pool.query(
+      `SELECT phone, stylist, service FROM checkins WHERE id = $1`,
+      [checkinId]
+    );
+
+    const { phone, stylist, service } = result.rows[0];
+    console.log('Saving stylist note:', { phone, stylist, service, notes });
+
+    await pool.query(
+      `INSERT INTO stylist_notes (phone, stylist, service, notes)
+       VALUES ($1, $2, $3, $4)`,
+      [phone, stylist, service, notes]
+    );
+  const { notes } = req.body;
+  const checkinId = req.params.id;
+
+  try {
     // Get phone, stylist, email, and service from checkin
     const result = await pool.query(
       `SELECT phone, stylist, email, service FROM checkins WHERE id = $1`,
