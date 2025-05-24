@@ -73,6 +73,7 @@ Thanks for choosing us!`,
   }
 });
 //stylist-notes
+// Cleaned and corrected POST route for stylist-notes
 app.post('/checkins/:id/stylist-notes', async (req, res) => {
   const { notes } = req.body;
   const checkinId = req.params.id;
@@ -91,30 +92,14 @@ app.post('/checkins/:id/stylist-notes', async (req, res) => {
        VALUES ($1, $2, $3, $4)`,
       [phone, stylist, service, notes]
     );
-  const { notes } = req.body;
-  const checkinId = req.params.id;
-
-  try {
-    // Get phone, stylist, email, and service from checkin
-    const result = await pool.query(
-      `SELECT phone, stylist, email, service FROM checkins WHERE id = $1`,
-      [checkinId]
-    );
-
-    const { phone, stylist, email, service } = result.rows[0];
-
-    await pool.query(
-      `INSERT INTO stylist_notes (phone, email, stylist, service, notes)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [phone, email || null, stylist, service, notes]
-    );
 
     res.sendStatus(200);
   } catch (err) {
-    console.error('Error saving stylist note:', err);
+    console.error('Error saving stylist note:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
+
 
 app.get('/stylist-notes/:phone/:stylist', async (req, res) => {
   const { phone, stylist } = req.params;
