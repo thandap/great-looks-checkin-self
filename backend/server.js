@@ -1,8 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
-const router = express.Router();
-const db = require('../db');
 require('dotenv').config();
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -16,37 +14,6 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
-
-
-// Get all notes for a check-in
-router.get('/:checkinId', async (req, res) => {
-  const { checkinId } = req.params;
-  try {
-    const result = await db.query(
-      'SELECT * FROM stylist_notes WHERE checkin_id = $1 ORDER BY created_at DESC',
-      [checkinId]
-    );
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch notes' });
-  }
-});
-
-// Add a new note
-router.post('/', async (req, res) => {
-  const { checkin_id, note_type, note_text, created_by } = req.body;
-  try {
-    const result = await db.query(
-      'INSERT INTO stylist_notes (checkin_id, note_type, note_text, created_by) VALUES ($1, $2, $3, $4) RETURNING *',
-      [checkin_id, note_type, note_text, created_by]
-    );
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to create note' });
-  }
-});
-
-module.exports = router;
 
 // Health check
 app.get('/', (req, res) => res.send('API running ✅'));
@@ -99,7 +66,7 @@ app.post('/checkin', async (req, res) => {
   }
 });
 
-// Cleaned and corrected POST route for stylist-notes
+// Save stylist note
 app.post('/checkins/:id/stylist-notes', async (req, res) => {
   const checkinId = req.params.id;
   const { notes } = req.body;
@@ -107,8 +74,8 @@ app.post('/checkins/:id/stylist-notes', async (req, res) => {
   try {
     const result = await pool.query(
       `INSERT INTO stylist_notes (checkin_id, note_type, note_text)
-       VALUES ($1, 'stylist', $2) RETURNING *`,
-      [checkinId, notes]
+       VALUES ($1, $2, $3) RETURNING *`,
+      [checkinId, 'stylist', notes]
     );
 
     res.status(201).json(result.rows[0]);
@@ -118,6 +85,7 @@ app.post('/checkins/:id/stylist-notes', async (req, res) => {
   }
 });
 
+// Get stylist notes
 app.get('/stylist-notes/:phone/:stylist', async (req, res) => {
   const { phone, stylist } = req.params;
 
