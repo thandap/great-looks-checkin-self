@@ -1,7 +1,49 @@
 import { useEffect, useState } from 'react';
 import NavBar from '../components/NavBar';
 
-export default function AdminPanel() {
+function StylistNotes({ item }) {
+  const [note, setNote] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchNote = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stylist-notes/${item.phone}/${item.stylist}`);
+        const data = await res.json();
+        if (data.notes) setNote(data.notes);
+      } catch (err) {
+        console.error('Error loading stylist note:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNote();
+  }, [item.phone, item.stylist]);
+
+  const handleBlur = async () => {
+    const clean = note.trim();
+    if (!clean) return;
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins/${item.id}/stylist-notes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notes: clean })
+    });
+  };
+
+  return (
+    <textarea
+      value={note}
+      disabled={loading}
+      className="w-full border mt-2 rounded p-2 text-sm"
+      placeholder="Stylist notes (tools used, preferences, etc.)"
+      onChange={e => setNote(e.target.value)}
+      onBlur={handleBlur}
+    ></textarea>
+  );
+}
+
+export default function Admin() {
   const [checkins, setCheckins] = useState([]);
 
   const fetchCheckins = async () => {
@@ -28,63 +70,74 @@ export default function AdminPanel() {
     fetchCheckins();
   }, []);
 
-  const waiting = Array.isArray(checkins) ? checkins.filter(c => c.status === 'Waiting') : [];
-  const nowServing = Array.isArray(checkins) ? checkins.filter(c => c.status === 'Now Serving') : [];
+  const waiting = checkins.filter(c => c.status === 'Waiting');
+  const nowServing = checkins.filter(c => c.status === 'Now Serving');
 
   return (
     <>
       <NavBar />
       <main className="min-h-screen bg-gray-50 p-6" role="main">
-        <section className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <h2 className="text-2xl font-semibold text-yellow-700 mb-4">⏳ Waiting Queue</h2>
-            {waiting.length === 0 ? (
-              <p className="text-gray-500 mb-6">No customers waiting.</p>
-            ) : (
-              <ul className="space-y-4 mb-8">
-                {waiting.map(item => (
-                  <li key={item.id} className="bg-white p-4 rounded shadow">
-                    <p className="font-semibold text-lg">{item.name}</p>
-                    <p className="text-gray-600 text-sm">📞 {item.phone} | 💇 {item.service} | ✂️ {item.stylist}</p>
-                    <p className="text-sm text-gray-600">
-                      ⏳ Wait: {Math.floor((Date.now() - new Date(item.created_at)) / 60000)} min
-                    </p>
-                    <button
-                      onClick={() => markNowServing(item.id)}
-                      className="mt-2 px-4 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
-                    >
-                      Serve Now
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+        <section className="max-w-4xl mx-auto" aria-labelledby="admin-heading">
+          <h1 id="admin-heading" className="text-3xl font-bold text-gray-800 mb-6">Admin Panel</h1>
 
-          <div>
-            <h2 className="text-2xl font-semibold text-green-700 mb-4">✅ Now Serving</h2>
-            {nowServing.length === 0 ? (
-              <p className="text-gray-500">No one is currently being served.</p>
-            ) : (
-              <ul className="space-y-4">
-                {nowServing.map(item => (
-                  <li key={item.id} className="bg-green-100 border border-green-400 p-4 rounded shadow">
-                    <p className="font-semibold text-lg">{item.name}</p>
-                    <p className="text-gray-600 text-sm">📞 {item.phone} | 💇 {item.service} | ✂️ {item.stylist}</p>
-                    <p className="text-sm text-gray-600">
-                      🕒 Checked in {Math.floor((Date.now() - new Date(item.created_at)) / 60000)} min ago
+          {/* Waiting Queue */}
+          <h2 className="text-2xl font-semibold text-yellow-700 mb-4">⏳ Waiting Queue</h2>
+          {waiting.length === 0 ? (
+            <p className="text-gray-500 mb-6">No customers waiting.</p>
+          ) : (
+            <ul className="space-y-4 mb-8">
+              {waiting.map(item => (
+                <li key={item.id} className="bg-white p-4 rounded shadow">
+                  <p className="font-semibold text-lg">{item.name}</p>
+                  <p className="text-gray-600 text-sm">📞 {item.phone} | 💇 {item.service} | ✂️ {item.stylist}</p>
+                  {item.notes && (
+                    <p className="text-sm bg-yellow-50 border-l-4 border-yellow-400 p-2 mt-1 rounded">
+                      📝 <strong>Notes:</strong> <em>{item.notes}</em>
                     </p>
-                    <button
-                      onClick={() => markServed(item.id)}
-                      className="mt-2 px-4 py-1 bg-[#8F9779] text-white rounded hover:bg-[#7b8569]"
-                    >
-                      Mark as Served
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+                  )}
+                  <p className="text-sm text-gray-600">
+                    ⏳ Wait: {Math.floor((Date.now() - new Date(item.created_at)) / 60000)} min
+                  </p>
+                  <button
+                    onClick={() => markNowServing(item.id)}
+                    className="mt-2 px-4 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
+                  >
+                    Serve Now
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {/* Now Serving */}
+          <h2 className="text-2xl font-semibold text-green-700 mb-4">✅ Now Serving</h2>
+          {nowServing.length === 0 ? (
+            <p className="text-gray-500">No one is currently being served.</p>
+          ) : (
+            <ul className="space-y-4">
+              {nowServing.map(item => (
+                <li key={item.id} className="bg-green-100 border border-green-400 p-4 rounded shadow">
+                  <p className="font-semibold text-lg">{item.name}</p>
+                  <p className="text-gray-600 text-sm">📞 {item.phone} | 💇 {item.service} | ✂️ {item.stylist}</p>
+                  {item.notes && (
+                    <p className="text-sm bg-yellow-50 border-l-4 border-yellow-400 p-2 mt-1 rounded">
+                      📝 <strong>Notes:</strong> <em>{item.notes}</em>
+                    </p>
+                  )}
+                  <StylistNotes item={item} />
+                  <p className="text-sm text-gray-600">
+                    ⏳ Wait: {Math.floor((Date.now() - new Date(item.created_at)) / 60000)} min
+                  </p>
+                  <button
+                    onClick={() => markServed(item.id)}
+                    className="mt-2 px-4 py-1 bg-[#8F9779] text-white rounded hover:bg-[#7b8569]"
+                  >
+                    Mark as Served
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       </main>
     </>
