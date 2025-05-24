@@ -4,13 +4,22 @@ import NavBar from '../components/NavBar';
 function StylistNotes({ item }) {
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(true);
+  const [previousNote, setPreviousNote] = useState('');
+  const [noteTimestamp, setNoteTimestamp] = useState(null);
 
   useEffect(() => {
     const fetchNote = async () => {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stylist-notes/${item.phone}/${item.stylist}`);
         const data = await res.json();
-        if (data.notes) setNote(data.notes);
+        if (Array.isArray(data) && data.length > 0) {
+          const stylistNote = data.find(n => n.note_type === 'stylist');
+          if (stylistNote) {
+            setNote(stylistNote.note_text);
+            setPreviousNote(stylistNote.note_text);
+            setNoteTimestamp(stylistNote.created_at);
+          }
+        }
       } catch (err) {
         console.error('Error loading stylist note:', err);
       } finally {
@@ -23,23 +32,37 @@ function StylistNotes({ item }) {
 
   const handleBlur = async () => {
     const clean = note.trim();
-    if (!clean) return;
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins/${item.id}/stylist-notes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ notes: clean })
-    });
+    if (!clean || clean === previousNote) return;
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins/${item.id}/stylist-notes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: clean })
+      });
+      if (res.ok) {
+        setPreviousNote(clean);
+        const responseData = await res.json();
+        setNoteTimestamp(responseData.created_at);
+      }
+    } catch (err) {
+      console.error('Error saving stylist note:', err);
+    }
   };
 
   return (
-    <textarea
-      value={note}
-      disabled={loading}
-      className="w-full border mt-2 rounded p-2 text-sm"
-      placeholder="Stylist notes (tools used, preferences, etc.)"
-      onChange={e => setNote(e.target.value)}
-      onBlur={handleBlur}
-    ></textarea>
+    <div className="mt-2">
+      <textarea
+        value={note}
+        disabled={loading}
+        className="w-full border mt-1 rounded p-2 text-sm focus:bg-white bg-gray-50 transition-colors"
+        placeholder="Stylist notes (tools used, preferences, etc.)"
+        onChange={e => setNote(e.target.value)}
+        onBlur={handleBlur}
+      ></textarea>
+      {noteTimestamp && (
+        <p className="text-xs text-gray-400">Last updated: {new Date(noteTimestamp).toLocaleString()}</p>
+      )}
+    </div>
   );
 }
 
