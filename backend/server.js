@@ -69,14 +69,23 @@ app.post('/checkin', async (req, res) => {
 // Save stylist note
 app.post('/checkins/:id/stylist-notes', async (req, res) => {
   const checkinId = req.params.id;
-  const { notes } = req.body;
+  const { notes, note_type = 'stylist', created_by = 'unknown' } = req.body;
 
   try {
     const result = await pool.query(
-      `INSERT INTO stylist_notes (checkin_id, note_type, note_text)
-       VALUES ($1, $2, $3) RETURNING *`,
-      [checkinId, 'stylist', notes]
+      `INSERT INTO stylist_notes (checkin_id, note_type, note_text, created_by)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [checkinId, note_type, notes, created_by]
     );
+
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('Error saving stylist note:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
