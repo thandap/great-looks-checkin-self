@@ -263,7 +263,59 @@ app.put('/checkins/:id/cancel', (req, res) => {
       res.status(500).json({ error: err.message });
     });
 });
+// Inventory Routes
+app.get('/admin/inventory', verifyAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT id, name, stock, cost, price, is_active, created_at
+      FROM inventory
+      ORDER BY name ASC
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching inventory:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
+app.post('/admin/inventory', verifyAdmin, async (req, res) => {
+  const { name, stock, cost, price } = req.body;
+  try {
+    const result = await pool.query(
+      `INSERT INTO inventory (name, stock, cost, price) VALUES ($1, $2, $3, $4) RETURNING *`,
+      [name, stock || 0, cost || 0, price || 0]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('Error adding inventory item:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/admin/inventory/:id', verifyAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { name, stock, cost, price, is_active } = req.body;
+  try {
+    await pool.query(
+      `UPDATE inventory SET name = $1, stock = $2, cost = $3, price = $4, is_active = $5 WHERE id = $6`,
+      [name, stock, cost, price, is_active, id]
+    );
+    res.sendStatus(200);
+  } catch (err) {
+    console.error('Error updating inventory item:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/admin/inventory/:id', verifyAdmin, async (req, res) => {
+  try {
+    await pool.query(`DELETE FROM inventory WHERE id = $1`, [req.params.id]);
+    res.sendStatus(200);
+  } catch (err) {
+    console.error('Error deleting inventory item:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`✅ Backend running on port ${PORT}`));
