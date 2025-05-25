@@ -85,15 +85,6 @@ app.post('/checkins/:id/stylist-notes', async (req, res) => {
   }
 });
 
-
-
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    console.error('Error saving stylist note:', err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // Get stylist notes
 app.get('/stylist-notes/:phone/:stylist', async (req, res) => {
   const { phone, stylist } = req.params;
