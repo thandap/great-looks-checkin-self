@@ -132,12 +132,33 @@ export default function Admin() {
   };
 
   const markNowServing = async (id) => {
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins/${id}/now-serving`, { method: 'PUT' });
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins/${id}/now-serving`, {
+      method: 'PUT',
+      headers: {
+        'x-admin-token': localStorage.getItem('adminToken')
+      }
+    });
     fetchCheckins();
   };
 
   const markServed = async (id) => {
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins/${id}`, { method: 'PUT' });
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins/${id}`, {
+      method: 'PUT',
+      headers: {
+        'x-admin-token': localStorage.getItem('adminToken')
+      }
+    });
+    fetchCheckins();
+  };
+
+  const cancelCheckin = async (id) => {
+    if (!confirm('Cancel this check-in?')) return;
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins/${id}/cancel`, {
+      method: 'PUT',
+      headers: {
+        'x-admin-token': localStorage.getItem('adminToken')
+      }
+    });
     fetchCheckins();
   };
 
@@ -173,12 +194,20 @@ export default function Admin() {
                   <p className="text-sm text-gray-600">
                     ⏳ Wait: {Math.floor((Date.now() - new Date(item.created_at)) / 60000)} min
                   </p>
-                  <button
-                    onClick={() => markNowServing(item.id)}
-                    className="mt-2 px-4 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
-                  >
-                    Serve Now
-                  </button>
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      onClick={() => markNowServing(item.id)}
+                      className="px-4 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
+                    >
+                      Serve Now
+                    </button>
+                    <button
+                      onClick={() => cancelCheckin(item.id)}
+                      className="px-4 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
