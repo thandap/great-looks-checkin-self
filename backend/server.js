@@ -283,7 +283,7 @@ app.post('/admin/inventory', verifyAdmin, async (req, res) => {
   try {
     const result = await pool.query(
       `INSERT INTO inventory (name, stock, cost, price,barcode) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [name, stock || 0, cost || 0, price || 0]
+      [name, stock || 0, cost || 0, price || 0, barcode]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -298,7 +298,8 @@ app.put('/admin/inventory/:id', verifyAdmin, async (req, res) => {
   try {
     await pool.query(
       `UPDATE inventory SET name = $1, stock = $2, cost = $3, price = $4, is_active = $5 WHERE id = $6`,
-      [name, stock, cost, price, barcode, is_active, id]
+      [name, stock, cost, price, barcode, is_active, id]    
+
     );
     res.sendStatus(200);
   } catch (err) {
