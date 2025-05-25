@@ -17,9 +17,22 @@ export default function AdminDashboard() {
         'x-admin-token': token
       }
     })
-      .then(res => res.ok ? res.json() : Promise.reject('Failed to load'))
-      .then(setStats)
-      .catch(err => setError(err));
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to load');
+        return res.json();
+      })
+      .then(data => {
+        // Ensure topServices and topStylists are always arrays
+        setStats({
+          ...data,
+          topServices: Array.isArray(data.topServices) ? data.topServices : [],
+          topStylists: Array.isArray(data.topStylists) ? data.topStylists : []
+        });
+      })
+      .catch(err => {
+        console.error('Dashboard fetch error:', err);
+        setError(err);
+      });
   }, []);
 
   return (
