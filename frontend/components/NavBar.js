@@ -80,6 +80,9 @@ export default function NavBar() {
                   <Link href="/admin-services" className="block text-sm hover:text-yellow-300 px-2 py-1">
                     Manage Services
                   </Link>
+                  <Link href="/admin-inventory" className="block text-sm hover:text-yellow-300 px-2 py-1">
+                    Manage Inventory
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="block w-full text-left text-sm hover:text-red-400 px-2 py-1"
