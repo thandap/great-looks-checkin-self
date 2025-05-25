@@ -5,12 +5,32 @@ export default function AdminServices() {
   const [services, setServices] = useState([]);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ price: '', duration: '' });
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/services`)
-      .then(res => res.json())
-      .then(setServices)
-      .catch(err => console.error('Error loading services:', err));
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      window.location.href = '/admin-login';
+      return;
+    }
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/services`, {
+      headers: {
+        'x-admin-token': token
+      }
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to load services');
+        return res.json();
+      })
+      .then(data => {
+        if (!Array.isArray(data)) throw new Error('Unexpected response format');
+        setServices(data);
+      })
+      .catch(err => {
+        console.error('Error loading services:', err);
+        setError(err.message);
+      });
   }, []);
 
   const handleEdit = (service) => {
@@ -24,9 +44,13 @@ export default function AdminServices() {
 
   const handleSave = async (id) => {
     try {
+      const token = localStorage.getItem('adminToken');
       await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/services/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': token
+        },
         body: JSON.stringify(form),
       });
       const updated = services.map(s =>
@@ -45,44 +69,48 @@ export default function AdminServices() {
       <main className="min-h-screen bg-gray-50 p-6">
         <section className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold text-gray-800 mb-6">Manage Services</h1>
-          <table className="w-full table-auto border border-gray-300">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border px-4 py-2">Service</th>
-                <th className="border px-4 py-2">Price ($)</th>
-                <th className="border px-4 py-2">Duration (min)</th>
-                <th className="border px-4 py-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {services.map(service => (
-                <tr key={service.id}>
-                  <td className="border px-4 py-2">{service.name}</td>
-                  <td className="border px-4 py-2">
-                    {editing === service.id ? (
-                      <input name="price" type="number" value={form.price} onChange={handleChange} className="w-full border px-2" />
-                    ) : (
-                      `$${service.price}`
-                    )}
-                  </td>
-                  <td className="border px-4 py-2">
-                    {editing === service.id ? (
-                      <input name="duration" type="number" value={form.duration} onChange={handleChange} className="w-full border px-2" />
-                    ) : (
-                      `${service.duration} min`
-                    )}
-                  </td>
-                  <td className="border px-4 py-2 text-center">
-                    {editing === service.id ? (
-                      <button onClick={() => handleSave(service.id)} className="bg-green-500 text-white px-3 py-1 rounded">Save</button>
-                    ) : (
-                      <button onClick={() => handleEdit(service)} className="bg-blue-500 text-white px-3 py-1 rounded">Edit</button>
-                    )}
-                  </td>
+          {error ? (
+            <p className="text-red-600">{error}</p>
+          ) : (
+            <table className="w-full table-auto border border-gray-300">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border px-4 py-2">Service</th>
+                  <th className="border px-4 py-2">Price ($)</th>
+                  <th className="border px-4 py-2">Duration (min)</th>
+                  <th className="border px-4 py-2">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {services.map(service => (
+                  <tr key={service.id}>
+                    <td className="border px-4 py-2">{service.name}</td>
+                    <td className="border px-4 py-2">
+                      {editing === service.id ? (
+                        <input name="price" type="number" value={form.price} onChange={handleChange} className="w-full border px-2" />
+                      ) : (
+                        `$${service.price}`
+                      )}
+                    </td>
+                    <td className="border px-4 py-2">
+                      {editing === service.id ? (
+                        <input name="duration" type="number" value={form.duration} onChange={handleChange} className="w-full border px-2" />
+                      ) : (
+                        `${service.duration} min`
+                      )}
+                    </td>
+                    <td className="border px-4 py-2 text-center">
+                      {editing === service.id ? (
+                        <button onClick={() => handleSave(service.id)} className="bg-green-500 text-white px-3 py-1 rounded">Save</button>
+                      ) : (
+                        <button onClick={() => handleEdit(service)} className="bg-blue-500 text-white px-3 py-1 rounded">Edit</button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </section>
       </main>
     </>
