@@ -213,6 +213,43 @@ app.put('/admin/services/:id', verifyAdmin, async (req, res) => {
   }
 });
 
+app.get('/admin/stats', verifyAdmin, async (req, res) => {
+  try {
+    const totalCheckinsRes = await pool.query(`SELECT COUNT(*) FROM checkins WHERE DATE(created_at) = CURRENT_DATE`);
+    const onlineCheckinsRes = await pool.query(`SELECT COUNT(*) FROM checkins WHERE checkin_method = 'online' AND DATE(created_at) = CURRENT_DATE`);
+    const walkinCheckinsRes = await pool.query(`SELECT COUNT(*) FROM checkins WHERE (checkin_method IS NULL OR checkin_method != 'online') AND DATE(created_at) = CURRENT_DATE`);
+
+    const topServicesRes = await pool.query(`
+      SELECT service, COUNT(*) as count
+      FROM checkins
+      WHERE DATE(created_at) = CURRENT_DATE
+      GROUP BY service
+      ORDER BY count DESC
+      LIMIT 5
+    `);
+
+    const topStylistsRes = await pool.query(`
+      SELECT stylist, COUNT(*) as count
+      FROM checkins
+      WHERE DATE(created_at) = CURRENT_DATE
+      GROUP BY stylist
+      ORDER BY count DESC
+      LIMIT 5
+    `);
+
+    res.json({
+      totalCheckins: Number(totalCheckinsRes.rows[0].count),
+      onlineCheckins: Number(onlineCheckinsRes.rows[0].count),
+      walkinCheckins: Number(walkinCheckinsRes.rows[0].count),
+      topServices: topServicesRes.rows,
+      topStylists: topStylistsRes.rows
+    });
+  } catch (err) {
+    console.error('Error fetching admin stats:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`✅ Backend running on port ${PORT}`));
