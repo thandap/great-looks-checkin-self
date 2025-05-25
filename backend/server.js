@@ -9,6 +9,15 @@ const app = express();
 app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
 app.use(express.json());
 
+// Admin token validation middleware
+function verifyAdmin(req, res, next) {
+  const token = req.headers['x-admin-token'];
+  if (token !== process.env.ADMIN_SECRET) {
+    return res.status(403).json({ error: 'Forbidden: Admin access only' });
+  }
+  next();
+}
+
 // PostgreSQL connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -66,10 +75,17 @@ app.post('/checkin', async (req, res) => {
   }
 });
 
-// Save stylist note
+// Save stylist note (admin required for admin notes)
 app.post('/checkins/:id/stylist-notes', async (req, res) => {
   const checkinId = req.params.id;
   const { notes, note_type = 'stylist', created_by = 'unknown' } = req.body;
+
+  if (note_type === 'admin') {
+    const token = req.headers['x-admin-token'];
+    if (token !== process.env.ADMIN_SECRET) {
+      return res.status(403).json({ error: 'Forbidden: Admin access only' });
+    }
+  }
 
   try {
     const result = await pool.query(
@@ -166,7 +182,7 @@ app.put('/checkins/:id', async (req, res) => {
 });
 
 // Get all services (for admin view)
-app.get('/admin/services', async (req, res) => {
+app.get('/admin/services', verifyAdmin, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT id, name, price, duration FROM services ORDER BY name`
@@ -179,7 +195,7 @@ app.get('/admin/services', async (req, res) => {
 });
 
 // Update a service (admin edit)
-app.put('/admin/services/:id', async (req, res) => {
+app.put('/admin/services/:id', verifyAdmin, async (req, res) => {
   const { price, duration } = req.body;
   if (isNaN(price) || isNaN(duration) || price < 0 || duration <= 0) {
     return res.status(400).json({ error: 'Invalid price or duration' });
