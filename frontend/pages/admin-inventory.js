@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import NavBar from '../components/NavBar';
 
@@ -11,13 +11,25 @@ export default function AdminInventory() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [showScanner, setShowScanner] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const qrCodeRef = useRef(null);
+
+  const filteredItems = items.filter(item =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.barcode?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const paginatedItems = filteredItems.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
 
   const fetchInventory = async () => {
     const token = localStorage.getItem('adminToken');
-    if (!token) {
-    window.location.href = '/admin-login';
-    return;
-  }
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/inventory`, {
         headers: { 'x-admin-token': token }
@@ -38,7 +50,7 @@ export default function AdminInventory() {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         }
-     });
+      });
       const data = await res.json();
       if (data && data.items && data.items.length > 0) {
         const item = data.items[0];
@@ -50,7 +62,7 @@ export default function AdminInventory() {
         setSuccess('Product info loaded from barcode');
       } else {
         setSuccess(null);
-        setError('No info found for this barcode');
+        setError('No info found for this barcode — please enter details manually.');
       }
     } catch (err) {
       console.error('Barcode lookup failed:', err);
@@ -62,15 +74,18 @@ export default function AdminInventory() {
     if (!window.Html5QrcodeScanner && typeof window !== 'undefined') {
       const { Html5Qrcode } = await import('html5-qrcode');
       const html5QrCode = new Html5Qrcode("reader");
+      qrCodeRef.current = html5QrCode;
+
       const config = { fps: 10, qrbox: 250 };
 
       html5QrCode.start(
         { facingMode: "environment" },
         config,
         async (decodedText) => {
-          html5QrCode.stop();
+          await html5QrCode.stop();
           setForm((prev) => ({ ...prev, barcode: decodedText }));
           setShowScanner(false);
+          qrCodeRef.current = null;
           await fetchProductDetailsByBarcode(decodedText);
         },
         (errorMessage) => {
@@ -78,6 +93,19 @@ export default function AdminInventory() {
         }
       ).catch((err) => console.error("Error starting scanner", err));
     }
+  };
+
+  const stopScanner = async () => {
+    if (qrCodeRef.current) {
+      try {
+        await qrCodeRef.current.stop();
+        qrCodeRef.current.clear();
+        qrCodeRef.current = null;
+      } catch (err) {
+        console.error('Error stopping scanner:', err);
+      }
+    }
+    setShowScanner(false);
   };
 
   useEffect(() => {
@@ -147,6 +175,14 @@ export default function AdminInventory() {
           {error && <p className="text-red-600 mb-2">❌ {error}</p>}
           {success && <p className="text-green-600 mb-2">✅ {success}</p>}
 
+          <input
+            type="text"
+            placeholder="Search items..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="mb-4 border px-3 py-2 rounded w-full"
+          />
+
           <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow space-y-4 mb-6">
             <div className="grid grid-cols-2 gap-4">
               <label className="flex flex-col">
@@ -155,15 +191,15 @@ export default function AdminInventory() {
               </label>
               <label className="flex flex-col">
                 <span className="text-sm text-gray-700 mb-1">Stock</span>
-                <input name="stock" type="number" min="0" placeholder="e.g., 12" value={form.stock} onChange={e => setForm({ ...form, stock: parseInt(e.target.value) || 0 })} className="border p-2 rounded" required />
+                <input name="stock" type="number" placeholder="e.g., 12" value={form.stock} onChange={e => setForm({ ...form, stock: parseInt(e.target.value) })} className="border p-2 rounded" required />
               </label>
               <label className="flex flex-col">
-                <span className="text-sm text-gray-700 mb-1">Cost ($)</span>
-                <input name="cost" type="number" step="0.01" placeholder="e.g., 3.50" value={form.cost} onChange={e => setForm({ ...form, cost: e.target.value })} className="border p-2 rounded" />
+                <span className="text-sm text-gray-700 mb-1">Cost</span>
+                <input name="cost" type="number" placeholder="e.g., 3.50" value={form.cost} onChange={e => setForm({ ...form, cost: e.target.value })} className="border p-2 rounded" />
               </label>
               <label className="flex flex-col">
-                <span className="text-sm text-gray-700 mb-1">Price ($)</span>
-                <input name="price" type="number" step="0.01" placeholder="e.g., 8.99" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} className="border p-2 rounded" />
+                <span className="text-sm text-gray-700 mb-1">Price</span>
+                <input name="price" type="number" placeholder="e.g., 6.00" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} className="border p-2 rounded" />
               </label>
               <label className="flex flex-col col-span-2">
                 <span className="text-sm text-gray-700 mb-1">Barcode</span>
@@ -181,9 +217,16 @@ export default function AdminInventory() {
                   }}
                   className="border p-2 rounded"
                 />
-                <button type="button" onClick={() => { setShowScanner(true); startBarcodeScanner(); }} className="mt-2 w-fit bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">
-                  Scan with Camera
-                </button>
+                <div className="mt-2 flex gap-2">
+                  <button type="button" onClick={() => { setShowScanner(true); startBarcodeScanner(); }} className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">
+                    Scan with Camera
+                  </button>
+                  {showScanner && (
+                    <button type="button" onClick={stopScanner} className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
+                      Stop Scanner
+                    </button>
+                  )}
+                </div>
               </label>
             </div>
             {showScanner && <div id="reader" className="mt-4 border p-4" />}
@@ -204,7 +247,7 @@ export default function AdminInventory() {
               </tr>
             </thead>
             <tbody>
-              {items.map(item => (
+              {paginatedItems.map(item => (
                 <tr key={item.id} className="border-t">
                   <td className="px-4 py-2">{item.name}</td>
                   <td className="px-4 py-2 text-right">{item.stock}</td>
@@ -219,6 +262,20 @@ export default function AdminInventory() {
               ))}
             </tbody>
           </table>
+
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-4 gap-2">
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`px-3 py-1 rounded border ${currentPage === i + 1 ? 'bg-blue-600 text-white' : 'bg-white text-blue-600'}`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+          )}
         </section>
       </main>
     </>
