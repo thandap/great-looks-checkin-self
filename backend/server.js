@@ -249,6 +249,20 @@ app.get('/admin/stats', verifyAdmin, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+app.put('/checkins/:id/cancel', (req, res) => {
+  const { id } = req.params;
+  const token = req.headers['x-admin-token'];
+  if (token !== process.env.ADMIN_SECRET) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  pool.query(`UPDATE checkins SET status = 'Canceled' WHERE id = $1`, [id])
+    .then(() => res.sendStatus(200))
+    .catch(err => {
+      console.error('Error cancelling check-in:', err);
+      res.status(500).json({ error: err.message });
+    });
+});
 
 // Start server
 const PORT = process.env.PORT || 5000;
