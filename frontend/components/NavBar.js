@@ -1,8 +1,22 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useState, useEffect } from 'react';
 
 export default function NavBar() {
   const router = useRouter();
+  const [adminOpen, setAdminOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    setIsAdmin(!!token);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    setIsAdmin(false);
+    router.push('/');
+  };
 
   const navItems = [
     { name: 'Home', path: '/' },
@@ -32,18 +46,38 @@ export default function NavBar() {
               {item.name}
             </Link>
           ))}
-          <div className="relative group">
-            <span className="cursor-pointer pb-1 border-b-2 border-transparent group-hover:border-yellow-300">
+
+          <div className="relative">
+            <button
+              onClick={() => setAdminOpen(!adminOpen)}
+              className="pb-1 border-b-2 border-transparent hover:border-yellow-300 focus:outline-none"
+            >
               Admin
-            </span>
-            <div className="absolute hidden group-hover:block bg-black mt-2 shadow-lg rounded p-2 space-y-1 z-10">
-              <Link href="/admin" className="block text-sm hover:text-yellow-300">
-                Admin Panel
-              </Link>
-              <Link href="/admin-services" className="block text-sm hover:text-yellow-300">
-                Manage Services
-              </Link>
-            </div>
+            </button>
+            {adminOpen && (
+              <div className="absolute right-0 bg-black mt-2 shadow-lg rounded p-2 space-y-1 z-10 min-w-[160px]">
+                {isAdmin ? (
+                  <>
+                    <Link href="/admin" className="block text-sm hover:text-yellow-300 px-2 py-1">
+                      Admin Panel
+                    </Link>
+                    <Link href="/admin-services" className="block text-sm hover:text-yellow-300 px-2 py-1">
+                      Manage Services
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left text-sm hover:text-red-400 px-2 py-1"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <Link href="/admin-login" className="block text-sm hover:text-yellow-300 px-2 py-1">
+                    Admin Login
+                  </Link>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

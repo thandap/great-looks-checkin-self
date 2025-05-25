@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 import NavBar from '../components/NavBar';
 
 function StylistNotes({ item }) {
@@ -44,7 +45,10 @@ function StylistNotes({ item }) {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins/${item.id}/stylist-notes`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': localStorage.getItem('adminToken')
+        },
         body: JSON.stringify({ notes: clean, note_type: noteType, created_by: createdBy })
       });
       if (res.ok) {
@@ -105,8 +109,17 @@ function StylistNotes({ item }) {
     </div>
   );
 }
+
 export default function Admin() {
+  const router = useRouter();
   const [checkins, setCheckins] = useState([]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      router.push('/admin-login');
+    }
+  }, [router]);
 
   const fetchCheckins = async () => {
     try {
