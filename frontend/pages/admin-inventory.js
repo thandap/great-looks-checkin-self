@@ -14,6 +14,10 @@ export default function AdminInventory() {
 
   const fetchInventory = async () => {
     const token = localStorage.getItem('adminToken');
+    if (!token) {
+    window.location.href = '/admin-login';
+    return;
+  }
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/inventory`, {
         headers: { 'x-admin-token': token }
