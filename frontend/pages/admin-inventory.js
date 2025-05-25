@@ -29,7 +29,12 @@ export default function AdminInventory() {
   const fetchProductDetailsByBarcode = async (barcode) => {
     if (!barcode) return;
     try {
-      const res = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${barcode}`);
+      const res = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${barcode}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+     });
       const data = await res.json();
       if (data && data.items && data.items.length > 0) {
         const item = data.items[0];
