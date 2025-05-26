@@ -105,7 +105,23 @@ export default function AdminServices() {
       console.error('Failed to add service:', err);
     }
   };
-
+const handleDelete = async (id) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this service?");
+    if (!confirmDelete) return;
+    try {
+      const token = localStorage.getItem('adminToken');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/services/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'x-admin-token': token
+        }
+      });
+      if (!res.ok) throw new Error('Delete failed');
+      setServices(prev => prev.filter(s => s.id !== id));
+    } catch (err) {
+      console.error('Failed to delete service:', err);
+    }
+  };
   return (
     <>
       <NavBar />
@@ -189,6 +205,7 @@ export default function AdminServices() {
                           <button onClick={() => handleSave(service.id)} className="bg-green-500 text-white px-3 py-1 rounded">Save</button>
                         ) : (
                           <button onClick={() => handleEdit(service)} className="bg-blue-500 text-white px-3 py-1 rounded">Edit</button>
+                          <button onClick={() => handleDelete(service.id)} className="bg-red-500 text-white px-3 py-1 rounded">Delete</button>
                         )}
                       </td>
                     </tr>
