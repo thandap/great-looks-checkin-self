@@ -201,13 +201,16 @@ const handleDelete = async (id) => {
                         )}
                       </td>
                       <td className="border px-4 py-2 text-center">
-                        {editing === service.id ? (
-                          <button onClick={() => handleSave(service.id)} className="bg-green-500 text-white px-3 py-1 rounded">Save</button>
-                        ) : (
-                          <button onClick={() => handleEdit(service)} className="bg-blue-500 text-white px-3 py-1 rounded">Edit</button>
-                          <button onClick={() => handleDelete(service.id)} className="bg-red-500 text-white px-3 py-1 rounded">Delete</button>
-                        )}
-                      </td>
+  {editing === service.id ? (
+    <button onClick={() => handleSave(service.id)} className="bg-green-500 text-white px-3 py-1 rounded">Save</button>
+  ) : (
+    <>
+      <button onClick={() => handleEdit(service)} className="bg-blue-500 text-white px-3 py-1 rounded">Edit</button>
+      <button onClick={() => handleDelete(service.id)} className="bg-red-500 text-white px-3 py-1 rounded ml-2">Delete</button>
+    </>
+  )}
+</td>
+
                     </tr>
                   ))}
                 </tbody>
