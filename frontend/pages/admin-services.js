@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import NavBar from '../components/NavBar';
-
+//Checked in final
 export default function AdminServices() {
   const [services, setServices] = useState([]);
   const [editing, setEditing] = useState(null);

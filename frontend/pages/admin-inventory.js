@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import NavBar from '../components/NavBar';
-
+//Checked in final
 const Html5QrcodeScanner = dynamic(() => import('html5-qrcode'), { ssr: false });
 
 export default function AdminInventory() {
