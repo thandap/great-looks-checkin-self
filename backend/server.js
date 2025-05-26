@@ -212,6 +212,25 @@ app.put('/admin/services/:id', verifyAdmin, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// Create a new service (admin add)
+app.post('/admin/services', verifyAdmin, async (req, res) => {
+  const { name, price, duration } = req.body;
+  if (!name || isNaN(price) || isNaN(duration)) {
+    return res.status(400).json({ error: 'Invalid name, price, or duration' });
+  }
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO services (name, price, duration, is_active)
+       VALUES ($1, $2, $3, true) RETURNING *`,
+      [name, price, duration]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('Error adding service:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 app.get('/admin/stats', verifyAdmin, async (req, res) => {
   try {
