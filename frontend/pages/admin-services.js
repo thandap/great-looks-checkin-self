@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import NavBar from '../components/NavBar';
-//Checked in final
+//Checked in 7:32
 export default function AdminServices() {
   const [services, setServices] = useState([]);
   const [editing, setEditing] = useState(null);
@@ -49,7 +49,7 @@ export default function AdminServices() {
 
   const handleEdit = (service) => {
     setEditing(service.id);
-        setForm({ name: service.name, price: service.price, duration: service.duration });
+    setForm({ name: service.name, price: service.price, duration: service.duration });
   };
 
   const handleChange = (e) => {
@@ -72,7 +72,7 @@ export default function AdminServices() {
         body: JSON.stringify(form),
       });
       const updated = services.map(s =>
-        s.id === id ? { ...s, price: form.price, duration: form.duration } : s
+        s.id === id ? { ...s, name: form.name, price: form.price, duration: form.duration } : s
       );
       setServices(updated);
       setEditing(null);
@@ -105,7 +105,8 @@ export default function AdminServices() {
       console.error('Failed to add service:', err);
     }
   };
-const handleDelete = async (id) => {
+
+  const handleDelete = async (id) => {
     const confirmDelete = window.confirm("Are you sure you want to delete this service?");
     if (!confirmDelete) return;
     try {
@@ -122,6 +123,7 @@ const handleDelete = async (id) => {
       console.error('Failed to delete service:', err);
     }
   };
+
   return (
     <>
       <NavBar />
@@ -185,15 +187,20 @@ const handleDelete = async (id) => {
                 <tbody>
                   {paginatedServices.map(service => (
                     <tr key={service.id}>
-                      <td className="border px-4 py-2">{service.name}</td>
                       <td className="border px-4 py-2">
-  {editing === service.id ? (
-    <input name="name" type="text" value={form.name} onChange={handleChange} className="w-full border px-2" />
-  ) : (
-    service.name
-  )}
-</td>
-
+                        {editing === service.id ? (
+                          <input name="name" type="text" value={form.name} onChange={handleChange} className="w-full border px-2" />
+                        ) : (
+                          service.name
+                        )}
+                      </td>
+                      <td className="border px-4 py-2">
+                        {editing === service.id ? (
+                          <input name="price" type="number" value={form.price} onChange={handleChange} className="w-full border px-2" />
+                        ) : (
+                          `$${Number(service.price).toFixed(2)}`
+                        )}
+                      </td>
                       <td className="border px-4 py-2">
                         {editing === service.id ? (
                           <input name="duration" type="number" value={form.duration} onChange={handleChange} className="w-full border px-2" />
@@ -202,16 +209,15 @@ const handleDelete = async (id) => {
                         )}
                       </td>
                       <td className="border px-4 py-2 text-center">
-  {editing === service.id ? (
-    <button onClick={() => handleSave(service.id)} className="bg-green-500 text-white px-3 py-1 rounded">Save</button>
-  ) : (
-    <>
-      <button onClick={() => handleEdit(service)} className="bg-blue-500 text-white px-3 py-1 rounded">Edit</button>
-      <button onClick={() => handleDelete(service.id)} className="bg-red-500 text-white px-3 py-1 rounded ml-2">Delete</button>
-    </>
-  )}
-</td>
-
+                        {editing === service.id ? (
+                          <button onClick={() => handleSave(service.id)} className="bg-green-500 text-white px-3 py-1 rounded">Save</button>
+                        ) : (
+                          <>
+                            <button onClick={() => handleEdit(service)} className="bg-blue-500 text-white px-3 py-1 rounded">Edit</button>
+                            <button onClick={() => handleDelete(service.id)} className="bg-red-500 text-white px-3 py-1 rounded ml-2">Delete</button>
+                          </>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
