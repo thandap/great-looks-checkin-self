@@ -49,7 +49,7 @@ export default function AdminServices() {
 
   const handleEdit = (service) => {
     setEditing(service.id);
-    setForm({ name: '', price: service.price, duration: service.duration });
+        setForm({ name: service.name, price: service.price, duration: service.duration });
   };
 
   const handleChange = (e) => {
@@ -187,12 +187,13 @@ const handleDelete = async (id) => {
                     <tr key={service.id}>
                       <td className="border px-4 py-2">{service.name}</td>
                       <td className="border px-4 py-2">
-                        {editing === service.id ? (
-                          <input name="price" type="number" value={form.price} onChange={handleChange} className="w-full border px-2" />
-                        ) : (
-                          `$${Number(service.price).toFixed(2)}`
-                        )}
-                      </td>
+  {editing === service.id ? (
+    <input name="name" type="text" value={form.name} onChange={handleChange} className="w-full border px-2" />
+  ) : (
+    service.name
+  )}
+</td>
+
                       <td className="border px-4 py-2">
                         {editing === service.id ? (
                           <input name="duration" type="number" value={form.duration} onChange={handleChange} className="w-full border px-2" />
