@@ -1,8 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import NavBar from '../components/NavBar';
-//Checked in final
-const Html5QrcodeScanner = dynamic(() => import('html5-qrcode'), { ssr: false });
+//Checked in 7:32
 
 export default function AdminInventory() {
   const [items, setItems] = useState([]);
@@ -71,7 +70,7 @@ export default function AdminInventory() {
   };
 
   const startBarcodeScanner = async () => {
-    if (!window.Html5QrcodeScanner && typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
       const { Html5Qrcode } = await import('html5-qrcode');
       const html5QrCode = new Html5Qrcode("reader");
       qrCodeRef.current = html5QrCode;
@@ -121,21 +120,28 @@ export default function AdminInventory() {
       : `${process.env.NEXT_PUBLIC_API_URL}/admin/inventory`;
 
     try {
+      const payload = editingId
+        ? { name: form.name, stock: form.stock, cost: form.cost, price: form.price, barcode: form.barcode, is_active: true }
+        : { name: form.name, stock: form.stock, cost: form.cost, price: form.price, barcode: form.barcode };
+
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
           'x-admin-token': token
         },
-        body: JSON.stringify({ ...form, is_active: true })
+        body: JSON.stringify(payload)
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Failed to save');
+
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || 'Failed to save');
+      }
 
       setForm({ name: '', stock: 0, cost: '', price: '', barcode: '' });
       setEditingId(null);
       setError(null);
-      setSuccess('Item saved successfully');
+      setSuccess(editingId ? 'Item updated successfully' : 'Item added successfully');
       fetchInventory();
     } catch (err) {
       console.error('Error saving inventory item:', err);
@@ -164,7 +170,7 @@ export default function AdminInventory() {
       console.error('Error deleting item:', err);
     }
   };
- 
+
   return (
     <>
       <NavBar />
@@ -255,16 +261,9 @@ export default function AdminInventory() {
                   <td className="px-4 py-2 text-right">${item.price}</td>
                   <td className="px-4 py-2 text-right">{item.barcode || '-'}</td>
                   <td className="border px-4 py-2 text-center space-x-2">
-  {editingId === item.id ? (
-    <button type="submit" className="bg-green-500 text-white px-3 py-1 rounded">Save</button>
-  ) : (
-    <>
-      <button onClick={() => startEdit(item)} className="bg-blue-500 text-white px-3 py-1 rounded">Edit</button>
-      <button onClick={() => handleDelete(item.id)} className="bg-red-500 text-white px-3 py-1 rounded">Delete</button>
-    </>
-  )}
-</td>
-
+                    <button onClick={() => startEdit(item)} className="bg-blue-500 text-white px-3 py-1 rounded">Edit</button>
+                    <button onClick={() => handleDelete(item.id)} className="bg-red-500 text-white px-3 py-1 rounded">Delete</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
