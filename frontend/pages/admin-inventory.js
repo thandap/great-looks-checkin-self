@@ -255,15 +255,16 @@ export default function AdminInventory() {
                   <td className="px-4 py-2 text-right">${item.price}</td>
                   <td className="px-4 py-2 text-right">{item.barcode || '-'}</td>
                   <td className="border px-4 py-2 text-center space-x-2">
-                        {editingId === service.id ? (
-                          <button onClick={() => handleSave(service.id)} className="bg-green-500 text-white px-3 py-1 rounded">Save</button>
-                        ) : (
-                          <>
-                            <button onClick={() => handleEdit(service)} className="bg-blue-500 text-white px-3 py-1 rounded">Edit</button>
-                            <button onClick={() => handleDelete(service.id)} className="bg-red-500 text-white px-3 py-1 rounded">Delete</button>
-                          </>
-                        )}
-                      </td>
+  {editingId === item.id ? (
+    <button type="submit" className="bg-green-500 text-white px-3 py-1 rounded">Save</button>
+  ) : (
+    <>
+      <button onClick={() => startEdit(item)} className="bg-blue-500 text-white px-3 py-1 rounded">Edit</button>
+      <button onClick={() => handleDelete(item.id)} className="bg-red-500 text-white px-3 py-1 rounded">Delete</button>
+    </>
+  )}
+</td>
+
                 </tr>
               ))}
             </tbody>
