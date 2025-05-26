@@ -316,9 +316,8 @@ app.put('/admin/inventory/:id', verifyAdmin, async (req, res) => {
   const { name, stock, cost, price, barcode, is_active } = req.body;
   try {
     await pool.query(
-      `UPDATE inventory SET name = $1, stock = $2, cost = $3, price = $4, is_active = $5 WHERE id = $6`,
-      [name, stock, cost, price, barcode, is_active, id]    
-
+      `UPDATE inventory SET name = $1, stock = $2, cost = $3, price = $4, barcode = $5, is_active = $6 WHERE id = $7`,
+      [name, stock, cost, price, barcode, is_active, id]
     );
     res.sendStatus(200);
   } catch (err) {
