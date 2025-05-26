@@ -255,7 +255,7 @@ export default function AdminInventory() {
                   <td className="px-4 py-2 text-right">${item.price}</td>
                   <td className="px-4 py-2 text-right">{item.barcode || '-'}</td>
                   <td className="border px-4 py-2 text-center space-x-2">
-                        {editing === service.id ? (
+                        {editingId === service.id ? (
                           <button onClick={() => handleSave(service.id)} className="bg-green-500 text-white px-3 py-1 rounded">Save</button>
                         ) : (
                           <>
