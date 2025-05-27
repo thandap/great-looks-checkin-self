@@ -10,7 +10,7 @@ export default function CheckIn() {
     stylist: '',
     time: '',
     notes: '',
-    email: '' // ✅ Added email to initial state
+    email: ''
   });
   const [stylists, setStylists] = useState([]);
   const [services, setServices] = useState([]);
@@ -110,48 +110,51 @@ export default function CheckIn() {
   return (
     <>
       <NavBar />
-      <main className="min-h-screen bg-[#FDFBF9] flex items-center justify-center px-4">
-        <section className="bg-white shadow-2xl rounded-2xl p-8 max-w-md w-full">
+      <main className="min-h-screen bg-[#FDFBF9] flex items-center justify-center px-4 py-10 sm:py-20">
+        <section className="bg-white shadow-2xl rounded-2xl p-8 w-full max-w-full sm:max-w-md">
           <h1 className="text-3xl font-serif text-center text-black mb-6">Check In Online</h1>
 
           {!submitted ? (
             <form onSubmit={handleSubmit} className="space-y-5">
-              <textarea
-                name="notes"
-                placeholder="Notes (e.g., style preference, requests)"
-                value={formData.notes}
-                onChange={handleChange}
-                className="w-full border rounded-md px-4 py-2"
-              />
-              <input
-                name="email"
-                placeholder="Email (optional)"
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full border rounded-md px-4 py-2"
-              />
-              <input
-                name="name"
-                required
-                placeholder="Name"
-                value={formData.name}
-                onChange={handleChange}
-                className="w-full border rounded-md px-4 py-2"
-              />
-              <div>
-                <input
-                  name="phone"
-                  required
-                  placeholder="Phone (10 digits)"
-                  value={formData.phone}
+              <fieldset className="space-y-4">
+                <textarea
+                  name="notes"
+                  placeholder="Notes (e.g., style preference, requests)"
+                  value={formData.notes}
                   onChange={handleChange}
                   className="w-full border rounded-md px-4 py-2"
                 />
-                {errors.phone && (
-                  <p className="text-sm text-red-600 mt-1">{errors.phone}</p>
-                )}
-              </div>
-              <div>
+                <input
+                  name="email"
+                  placeholder="Email (optional)"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full border rounded-md px-4 py-2"
+                />
+                <input
+                  name="name"
+                  required
+                  placeholder="Name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full border rounded-md px-4 py-2"
+                />
+                <div>
+                  <input
+                    name="phone"
+                    required
+                    placeholder="Phone (10 digits)"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="w-full border rounded-md px-4 py-2"
+                  />
+                  {errors.phone && (
+                    <p className="text-sm text-red-600 mt-1">{errors.phone}</p>
+                  )}
+                </div>
+              </fieldset>
+
+              <fieldset className="space-y-2">
                 {services.map(({ id, name, price, duration }) => (
                   <label key={id} className="block text-sm">
                     <input
@@ -164,11 +167,13 @@ export default function CheckIn() {
                     {name} - ${!isNaN(price) ? Number(price).toFixed(2) : '—'} ({duration || '--'} min)
                   </label>
                 ))}
-              </div>
-              <div className="text-sm text-gray-700 mt-2">
+              </fieldset>
+
+              <div className="text-base sm:text-sm text-gray-700 mt-2">
                 💲 Estimated Total: <strong>${totalPrice.toFixed(2)}</strong><br />
                 ⏱ Total Time: <strong>{totalDuration} minutes</strong>
               </div>
+
               <select
                 name="stylist"
                 required
@@ -194,7 +199,7 @@ export default function CheckIn() {
               <h2 className="text-center text-green-600 text-xl font-medium" role="status" aria-live="polite">
                 ✅ Thank you, {formData.name}!
               </h2>
-              <div className="text-center text-gray-700 mt-2 space-y-2 bg-green-50 border border-green-300 rounded-lg p-4 shadow">
+              <div className="text-center text-gray-700 mt-2 space-y-2 bg-green-50 border border-green-300 rounded-lg p-4 shadow max-h-[80vh] overflow-y-auto">
                 <p className="text-lg font-semibold text-green-800">Your Check-In Summary</p>
                 <p>✂️ Stylist: <strong>{formData.stylist}</strong></p>
                 <p>🕒 Estimated Wait: <strong>{estimatedWait} minutes</strong></p>
