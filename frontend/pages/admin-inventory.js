@@ -41,9 +41,16 @@ export default function AdminInventory() {
   if (!barcode) return;
   try {
     console.log('Looking up barcode:', barcode);
-    const res = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${barcode}`);
+
+    const res = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${barcode}`, {
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+
+    console.log('Raw response:', res.status);
     const data = await res.json();
-    console.log('Lookup result:', data);
+    console.log('UPC lookup response:', data);
 
     if (data?.items?.length > 0) {
       const item = data.items[0];
