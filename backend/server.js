@@ -336,6 +336,23 @@ app.delete('/admin/inventory/:id', verifyAdmin, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+app.get('/admin/barcode/:upc', verifyAdmin, async (req, res) => {
+  const upc = req.params.upc;
+
+  try {
+    const response = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${upc}`, {
+      headers: { Accept: 'application/json' }
+    });
+
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    console.error('Server-side barcode fetch failed:', err);
+    res.status(500).json({ error: 'Barcode lookup failed' });
+  }
+});
+
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`✅ Backend running on port ${PORT}`));
