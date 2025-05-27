@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import NavBar from '../components/NavBar';
-//Checked in 7:32
 
 export default function AdminInventory() {
   const [items, setItems] = useState([]);
@@ -12,20 +11,14 @@ export default function AdminInventory() {
   const [showScanner, setShowScanner] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortField, setSortField] = useState('name');
+  const [sortAsc, setSortAsc] = useState(true);
   const itemsPerPage = 10;
   const qrCodeRef = useRef(null);
 
-  const filteredItems = items.filter(item =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.barcode?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const paginatedItems = filteredItems.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  useEffect(() => {
+    fetchInventory();
+  }, []);
 
   const fetchInventory = async () => {
     const token = localStorage.getItem('adminToken');
@@ -107,9 +100,35 @@ export default function AdminInventory() {
     setShowScanner(false);
   };
 
-  useEffect(() => {
-    fetchInventory();
-  }, []);
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortAsc(!sortAsc);
+    } else {
+      setSortField(field);
+      setSortAsc(true);
+    }
+  };
+
+  const sortedItems = [...items].sort((a, b) => {
+    const aVal = a[sortField];
+    const bVal = b[sortField];
+    if (typeof aVal === 'string') {
+      return sortAsc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+    }
+    return sortAsc ? aVal - bVal : bVal - aVal;
+  });
+
+  const filteredItems = sortedItems.filter(item =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.barcode?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const paginatedItems = filteredItems.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -171,12 +190,29 @@ export default function AdminInventory() {
     }
   };
 
+  const exportToCSV = () => {
+    const headers = ['Name', 'Stock', 'Cost', 'Price', 'Barcode'];
+    const rows = items.map(item => [item.name, item.stock, item.cost, item.price, item.barcode || '']);
+    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'inventory.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <>
       <NavBar />
       <main className="min-h-screen bg-gray-50 p-6">
-        <section className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold mb-6 text-gray-800">📦 Inventory Management</h1>
+        <section className="max-w-6xl mx-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-3xl font-bold text-gray-800">📦 Inventory Management</h1>
+            <button onClick={exportToCSV} className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Export CSV</button>
+          </div>
 
           {error && <p className="text-red-600 mb-2">❌ {error}</p>}
           {success && <p className="text-green-600 mb-2">✅ {success}</p>}
@@ -244,11 +280,15 @@ export default function AdminInventory() {
           <table className="w-full table-auto border">
             <thead>
               <tr className="bg-gray-100">
-                <th className="border px-4 py-2 text-left">Name</th>
-                <th className="border px-4 py-2 text-right">Stock</th>
-                <th className="border px-4 py-2 text-right">Cost</th>
-                <th className="border px-4 py-2 text-right">Price</th>
-                <th className="border px-4 py-2 text-right">Barcode</th>
+                {['name', 'stock', 'cost', 'price', 'barcode'].map(field => (
+                  <th
+                    key={field}
+                    className="border px-4 py-2 cursor-pointer text-left"
+                    onClick={() => handleSort(field)}
+                  >
+                    {field.charAt(0).toUpperCase() + field.slice(1)} {sortField === field ? (sortAsc ? '▲' : '▼') : ''}
+                  </th>
+                ))}
                 <th className="border px-4 py-2">Actions</th>
               </tr>
             </thead>
@@ -256,7 +296,7 @@ export default function AdminInventory() {
               {paginatedItems.map(item => (
                 <tr key={item.id} className="border-t">
                   <td className="px-4 py-2">{item.name}</td>
-                  <td className="px-4 py-2 text-right">{item.stock}</td>
+                  <td className={`px-4 py-2 text-right ${item.stock <= 5 ? 'text-red-600 font-semibold' : ''}`}>{item.stock}</td>
                   <td className="px-4 py-2 text-right">${item.cost}</td>
                   <td className="px-4 py-2 text-right">${item.price}</td>
                   <td className="px-4 py-2 text-right">{item.barcode || '-'}</td>
