@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 
 export default function NavBar() {
   const router = useRouter();
@@ -39,8 +40,15 @@ export default function NavBar() {
   return (
     <nav className="bg-black text-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-        <Link href="/" className="text-3xl font-extrabold tracking-tight text-yellow-400">
-          Great Looks
+        <Link href="/" className="flex items-center space-x-3">
+          <Image
+            src="/assets/great-looks-logo.png"
+            alt="Great Looks Logo"
+            width={36}
+            height={36}
+            className="rounded-full"
+          />
+          <span className="text-3xl font-extrabold tracking-tight text-yellow-400">Great Looks</span>
         </Link>
         <div className="flex gap-6 text-lg items-center">
           {navItems.map((item) => (

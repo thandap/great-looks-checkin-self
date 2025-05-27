@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import NavBar from '../components/NavBar';
-//Checked in 7:32
+
 export default function AdminServices() {
   const [services, setServices] = useState([]);
   const [editing, setEditing] = useState(null);
@@ -127,12 +127,12 @@ export default function AdminServices() {
   return (
     <>
       <NavBar />
-      <main className="min-h-screen bg-gray-50 p-6">
+      <main className="min-h-screen bg-gray-50 p-4 sm:p-6">
         <section className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold text-gray-800 mb-6">Manage Services</h1>
 
           <form onSubmit={handleAdd} className="bg-white p-4 rounded shadow space-y-4 mb-6">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <input
                 type="text"
                 name="name"
@@ -174,8 +174,8 @@ export default function AdminServices() {
           {error ? (
             <p className="text-red-600">{error}</p>
           ) : (
-            <>
-              <table className="w-full table-auto border border-gray-300">
+            <div className="overflow-x-auto">
+              <table className="w-full table-auto border border-gray-300 whitespace-nowrap">
                 <thead>
                   <tr className="bg-gray-100">
                     <th className="border px-4 py-2">Service</th>
@@ -222,21 +222,21 @@ export default function AdminServices() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
 
-              {totalPages > 1 && (
-                <div className="flex justify-center mt-4 gap-2">
-                  {Array.from({ length: totalPages }, (_, i) => (
-                    <button
-                      key={i + 1}
-                      onClick={() => setCurrentPage(i + 1)}
-                      className={`px-3 py-1 rounded border ${currentPage === i + 1 ? 'bg-blue-600 text-white' : 'bg-white text-blue-600'}`}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </>
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-4 gap-2">
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`px-3 py-1 rounded border ${currentPage === i + 1 ? 'bg-blue-600 text-white' : 'bg-white text-blue-600'}`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
           )}
         </section>
       </main>

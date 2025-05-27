@@ -172,7 +172,7 @@ export default function Admin() {
   return (
     <>
       <NavBar />
-      <main className="min-h-screen bg-gray-50 p-6" role="main">
+       <main className="min-h-screen bg-gray-50 p-4 sm:p-6" role="main">  
         <section className="max-w-4xl mx-auto" aria-labelledby="admin-heading">
           <h1 id="admin-heading" className="text-3xl font-bold text-gray-800 mb-6">Admin Panel</h1>
 
@@ -185,7 +185,7 @@ export default function Admin() {
               {waiting.map(item => (
                 <li key={item.id} className="bg-white p-4 rounded shadow">
                   <p className="font-semibold text-lg">{item.name}</p>
-                  <p className="text-gray-600 text-sm">📞 {item.phone} | 💇 {item.service} | ✂️ {item.stylist}</p>
+                   <p className="text-gray-600 text-sm break-words">📞 {item.phone} | 💇 {item.service} | ✂️ {item.stylist}</p>
                   {item.notes && (
                     <p className="text-sm bg-yellow-50 border-l-4 border-yellow-400 p-2 mt-1 rounded">
                       📝 <strong>Notes:</strong> <em>{item.notes}</em>
@@ -194,16 +194,16 @@ export default function Admin() {
                   <p className="text-sm text-gray-600">
                     ⏳ Wait: {Math.floor((Date.now() - new Date(item.created_at)) / 60000)} min
                   </p>
-                  <div className="mt-2 flex gap-2">
+                   <div className="mt-2 flex flex-col sm:flex-row gap-2">
                     <button
                       onClick={() => markNowServing(item.id)}
-                      className="px-4 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
+                      className="w-full sm:w-auto px-4 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
                     >
                       Serve Now
                     </button>
                     <button
                       onClick={() => cancelCheckin(item.id)}
-                      className="px-4 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                      className="w-full sm:w-auto px-4 py-1 bg-red-500 text-white rounded hover:bg-red-600"
                     >
                       Cancel
                     </button>
@@ -222,7 +222,7 @@ export default function Admin() {
               {nowServing.map(item => (
                 <li key={item.id} className="bg-green-100 border border-green-400 p-4 rounded shadow">
                   <p className="font-semibold text-lg">{item.name}</p>
-                  <p className="text-gray-600 text-sm">📞 {item.phone} | 💇 {item.service} | ✂️ {item.stylist}</p>
+                  <p className="text-gray-600 text-sm break-words">📞 {item.phone} | 💇 {item.service} | ✂️ {item.stylist}</p>
                   {item.notes && (
                     <p className="text-sm bg-yellow-50 border-l-4 border-yellow-400 p-2 mt-1 rounded">
                       📝 <strong>Notes:</strong> <em>{item.notes}</em>
@@ -234,7 +234,7 @@ export default function Admin() {
                   </p>
                   <button
                     onClick={() => markServed(item.id)}
-                    className="mt-2 px-4 py-1 bg-[#8F9779] text-white rounded hover:bg-[#7b8569]"
+                    className="mt-2 w-full sm:w-auto px-4 py-1 bg-[#8F9779] text-white rounded hover:bg-[#7b8569]"
                   >
                     Mark as Served
                   </button>

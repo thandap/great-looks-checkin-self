@@ -233,7 +233,7 @@ export default function AdminInventory() {
     <>
       <NavBar />
       <main className="min-h-screen bg-gray-50 p-6">
-        <section className="max-w-6xl mx-auto">
+        <section className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-3xl font-bold text-gray-800">📦 Inventory Management</h1>
             <button onClick={exportToCSV} className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Export CSV</button>
@@ -260,7 +260,7 @@ export default function AdminInventory() {
           />
 
           <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow space-y-4 mb-6">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label className="flex flex-col">
                 <span className="text-sm text-gray-700 mb-1">Item Name</span>
                 <input name="name" placeholder="e.g., Shampoo" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="border p-2 rounded" required />
@@ -311,7 +311,7 @@ export default function AdminInventory() {
             </button>
           </form>
 
-          <table className="w-full table-auto border">
+          <table className="w-full table-auto border overflow-x-auto block whitespace-nowrap">
             <thead>
               <tr className="bg-gray-100">
                 {['name', 'stock', 'cost', 'price', 'barcode'].map(field => (
