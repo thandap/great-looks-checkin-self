@@ -4,7 +4,7 @@ import NavBar from '../components/NavBar';
 
 export default function AdminInventory() {
   const [items, setItems] = useState([]);
-  const [form, setForm] = useState({ name: '', stock: 0, cost: '', price: '', barcode: '' });
+  const [form, setForm] = useState({ name: '', stock: 0, cost: '', price: '', barcode: '', image: '' });
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -13,12 +13,23 @@ export default function AdminInventory() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState('name');
   const [sortAsc, setSortAsc] = useState(true);
+  const [allowAutoFill, setAllowAutoFill] = useState(true);
   const itemsPerPage = 10;
   const qrCodeRef = useRef(null);
 
   useEffect(() => {
     fetchInventory();
   }, []);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (form.barcode?.length >= 6 && allowAutoFill) {
+        fetchProductDetailsByBarcode(form.barcode);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [form.barcode, allowAutoFill]);
 
   const fetchInventory = async () => {
     const token = localStorage.getItem('adminToken');
@@ -38,45 +49,44 @@ export default function AdminInventory() {
   };
 
   const fetchProductDetailsByBarcode = async (barcode) => {
-  if (!barcode) return;
-  try {
-    console.log('Looking up barcode:', barcode);
+    if (!barcode) return;
+    try {
+      console.log('Looking up barcode:', barcode);
+      const token = localStorage.getItem('adminToken');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/barcode/${barcode}`, {
+        headers: {
+          'x-admin-token': token
+        }
+      });
+      console.log('Raw response:', res.status);
+      const data = await res.json();
+      console.log('UPC lookup response:', data);
 
-    const token = localStorage.getItem('adminToken');
-const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/barcode/${barcode}`, {
-  headers: {
-    'x-admin-token': token
-  }
-});
+      if (data?.items?.length > 0) {
+        const item = data.items[0];
+        const offerPrice = item.offers?.[0]?.price ?? '';
+        const title = item.title ?? '';
+        const image = item.images?.[0] ?? '';
 
+        setForm(prev => ({
+          ...prev,
+          name: title || prev.name,
+          price: offerPrice || prev.price,
+          cost: offerPrice || prev.cost,
+          image
+        }));
 
-    console.log('Raw response:', res.status);
-    const data = await res.json();
-    console.log('UPC lookup response:', data);
-
-    if (data?.items?.length > 0) {
-      const item = data.items[0];
-      const offerPrice = item.offers?.[0]?.price ?? '';
-      const title = item.title ?? '';
-
-      setForm(prev => ({
-        ...prev,
-        name: title || prev.name,
-        price: offerPrice || prev.price
-      }));
-
-      setSuccess('Product info loaded from barcode');
-      setError(null);
-    } else {
-      setSuccess(null);
-      setError('No info found for this barcode — please enter details manually.');
+        setSuccess('Product info loaded from barcode');
+        setError(null);
+      } else {
+        setSuccess(null);
+        setError('No info found for this barcode — please enter details manually.');
+      }
+    } catch (err) {
+      console.error('Error during barcode fetch:', err);
+      setError('Failed to fetch product info');
     }
-  } catch (err) {
-    console.error('Error during barcode fetch:', err);
-    setError('Failed to fetch product info');
-  }
-};
-
+  };
 
   const startBarcodeScanner = async () => {
     if (typeof window !== 'undefined') {
@@ -94,7 +104,6 @@ const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/barcode/${barc
           setForm((prev) => ({ ...prev, barcode: decodedText }));
           setShowScanner(false);
           qrCodeRef.current = null;
-          await fetchProductDetailsByBarcode(decodedText);
         },
         (errorMessage) => {
           console.warn(errorMessage);
@@ -173,7 +182,7 @@ const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/barcode/${barc
         throw new Error(result.error || 'Failed to save');
       }
 
-      setForm({ name: '', stock: 0, cost: '', price: '', barcode: '' });
+      setForm({ name: '', stock: 0, cost: '', price: '', barcode: '', image: '' });
       setEditingId(null);
       setError(null);
       setSuccess(editingId ? 'Item updated successfully' : 'Item added successfully');
@@ -187,7 +196,7 @@ const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/barcode/${barc
 
   const startEdit = (item) => {
     setEditingId(item.id);
-    setForm({ name: item.name, stock: item.stock, cost: item.cost, price: item.price, barcode: item.barcode ?? '' });
+    setForm({ name: item.name, stock: item.stock, cost: item.cost, price: item.price, barcode: item.barcode ?? '', image: item.image ?? '' });
     setError(null);
     setSuccess(null);
   };
@@ -233,6 +242,15 @@ const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/barcode/${barc
           {error && <p className="text-red-600 mb-2">❌ {error}</p>}
           {success && <p className="text-green-600 mb-2">✅ {success}</p>}
 
+          <div className="flex items-center gap-3 mb-2">
+            <input
+              type="checkbox"
+              checked={allowAutoFill}
+              onChange={() => setAllowAutoFill(!allowAutoFill)}
+            />
+            <label className="text-sm text-gray-600">Enable barcode autofill</label>
+          </div>
+
           <input
             type="text"
             placeholder="Search items..."
@@ -266,15 +284,15 @@ const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/barcode/${barc
                   type="text"
                   placeholder="Scan or enter barcode"
                   value={form.barcode}
-                  onChange={async e => {
-                    const barcode = e.target.value;
-                    setForm(prev => ({ ...prev, barcode }));
-                    if (barcode.length >= 6) {
-                      await fetchProductDetailsByBarcode(barcode);
-                    }
-                  }}
+                  onChange={e => setForm(prev => ({ ...prev, barcode: e.target.value }))}
                   className="border p-2 rounded"
                 />
+                {form.name && (
+                  <div className="mt-2 text-sm text-green-700">
+                    <p>Suggested: <strong>{form.name}</strong>{form.price && ` – $${form.price}`}</p>
+                    {form.image && <img src={form.image} alt="Product preview" className="mt-2 w-32 h-auto border" />}
+                  </div>
+                )}
                 <div className="mt-2 flex gap-2">
                   <button type="button" onClick={() => { setShowScanner(true); startBarcodeScanner(); }} className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">
                     Scan with Camera
