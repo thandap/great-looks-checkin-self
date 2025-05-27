@@ -27,7 +27,7 @@ export default function AdminInventory() {
         headers: { 'x-admin-token': token }
       });
       const data = await res.json();
-      setItems(Array.isArray(data) ? data : []);
+      setItems(Array.isArray(data) ? data.map(item => ({ ...item, barcode: item.barcode || '' })) : []);
     } catch (err) {
       console.error('Error loading inventory:', err);
       setError('Failed to load inventory');
@@ -119,8 +119,8 @@ export default function AdminInventory() {
   });
 
   const filteredItems = sortedItems.filter(item =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.barcode?.toLowerCase().includes(searchTerm.toLowerCase())
+    (item.name && item.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (item.barcode && item.barcode.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const paginatedItems = filteredItems.slice(
