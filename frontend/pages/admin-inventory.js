@@ -42,11 +42,13 @@ export default function AdminInventory() {
   try {
     console.log('Looking up barcode:', barcode);
 
-    const res = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${barcode}`, {
-      headers: {
-        'Accept': 'application/json'
-      }
-    });
+    const token = localStorage.getItem('adminToken');
+const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/barcode/${barcode}`, {
+  headers: {
+    'x-admin-token': token
+  }
+});
+
 
     console.log('Raw response:', res.status);
     const data = await res.json();
