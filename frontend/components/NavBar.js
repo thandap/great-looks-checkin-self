@@ -2,10 +2,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
+import { Menu, X } from 'lucide-react';
 
 export default function NavBar() {
   const router = useRouter();
   const [adminOpen, setAdminOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const adminRef = useRef(null);
 
@@ -39,18 +41,21 @@ export default function NavBar() {
 
   return (
     <nav className="bg-black text-white shadow-md sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-        <Link href="/" className="flex items-center space-x-3">
-          <Image
-            src="/assets/great-looks-logo.png"
-            alt="Great Looks Logo"
-            width={36}
-            height={36}
-            className="rounded-full"
-          />
-          <span className="text-3xl font-extrabold tracking-tight text-yellow-400">Great Looks</span>
-        </Link>
-        <div className="flex gap-6 text-lg items-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <Link href="/" className="flex items-center space-x-2">
+            <Image src="/assets/great-looks-logo.png" alt="Logo" width={36} height={36} className="rounded-full" />
+            <span className="text-xl font-extrabold tracking-tight text-yellow-400 whitespace-nowrap">Great Looks</span>
+          </Link>
+        </div>
+
+        <div className="md:hidden">
+          <button onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle Menu">
+            {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
+
+        <div className="hidden md:flex gap-6 text-lg items-center">
           {navItems.map((item) => (
             <Link
               key={item.name}
@@ -79,34 +84,49 @@ export default function NavBar() {
             >
               {isAdmin ? (
                 <>
-                  <Link href="/admin" className="block text-sm hover:text-yellow-300 px-2 py-1">
-                    Admin Panel
-                  </Link>
-                  <Link href="/admin-dashboard" className="block text-sm hover:text-yellow-300 px-2 py-1">
-                    Analytics Dashboard
-                  </Link>
-                  <Link href="/admin-services" className="block text-sm hover:text-yellow-300 px-2 py-1">
-                    Manage Services
-                  </Link>
-                  <Link href="/admin-inventory" className="block text-sm hover:text-yellow-300 px-2 py-1">
-                    Manage Inventory
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="block w-full text-left text-sm hover:text-red-400 px-2 py-1"
-                  >
-                    Logout
-                  </button>
+                  <Link href="/admin" className="block text-sm hover:text-yellow-300 px-2 py-1">Admin Panel</Link>
+                  <Link href="/admin-dashboard" className="block text-sm hover:text-yellow-300 px-2 py-1">Analytics Dashboard</Link>
+                  <Link href="/admin-services" className="block text-sm hover:text-yellow-300 px-2 py-1">Manage Services</Link>
+                  <Link href="/admin-inventory" className="block text-sm hover:text-yellow-300 px-2 py-1">Manage Inventory</Link>
+                  <button onClick={handleLogout} className="block w-full text-left text-sm hover:text-red-400 px-2 py-1">Logout</button>
                 </>
               ) : (
-                <Link href="/admin-login" className="block text-sm hover:text-yellow-300 px-2 py-1">
-                  Admin Login
-                </Link>
+                <Link href="/admin-login" className="block text-sm hover:text-yellow-300 px-2 py-1">Admin Login</Link>
               )}
             </div>
           </div>
         </div>
       </div>
+
+      {menuOpen && (
+        <div className="md:hidden bg-black px-6 pb-4 text-lg space-y-2">
+          {navItems.map((item) => (
+            <Link
+              key={item.name}
+              href={item.path}
+              onClick={() => setMenuOpen(false)}
+              className={`block border-b-2 pb-1 ${
+                router.pathname === item.path ? 'text-yellow-400 border-yellow-400' : 'border-transparent hover:text-yellow-300 hover:border-yellow-300'
+              }`}
+            >
+              {item.name}
+            </Link>
+          ))}
+          <div className="pt-2 border-t border-gray-700">
+            {isAdmin ? (
+              <>
+                <Link href="/admin" className="block text-sm hover:text-yellow-300 py-1">Admin Panel</Link>
+                <Link href="/admin-dashboard" className="block text-sm hover:text-yellow-300 py-1">Dashboard</Link>
+                <Link href="/admin-services" className="block text-sm hover:text-yellow-300 py-1">Services</Link>
+                <Link href="/admin-inventory" className="block text-sm hover:text-yellow-300 py-1">Inventory</Link>
+                <button onClick={handleLogout} className="block text-sm text-left text-red-400 py-1">Logout</button>
+              </>
+            ) : (
+              <Link href="/admin-login" className="block text-sm hover:text-yellow-300 py-1">Admin Login</Link>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
