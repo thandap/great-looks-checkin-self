@@ -286,7 +286,7 @@ app.put('/checkins/:id/cancel', (req, res) => {
 app.get('/admin/inventory', verifyAdmin, async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT id, name, stock, cost, price, is_active, created_at
+      SELECT id, name, stock, cost, price, barcode, is_active, created_at
       FROM inventory
       ORDER BY name ASC
     `);
@@ -296,6 +296,7 @@ app.get('/admin/inventory', verifyAdmin, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 app.post('/admin/inventory', verifyAdmin, async (req, res) => {
   const { name, stock, cost, price,barcode } = req.body;
