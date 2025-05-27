@@ -38,32 +38,36 @@ export default function AdminInventory() {
   };
 
   const fetchProductDetailsByBarcode = async (barcode) => {
-    if (!barcode) return;
-    try {
-      const res = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${barcode}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
-      const data = await res.json();
-      if (data && data.items && data.items.length > 0) {
-        const item = data.items[0];
-        setForm((prev) => ({
-          ...prev,
-          name: item.title || prev.name,
-          price: item.offers?.[0]?.price || prev.price
-        }));
-        setSuccess('Product info loaded from barcode');
-      } else {
-        setSuccess(null);
-        setError('No info found for this barcode — please enter details manually.');
-      }
-    } catch (err) {
-      console.error('Barcode lookup failed:', err);
-      setError('Failed to fetch product info');
+  if (!barcode) return;
+  try {
+    console.log('Looking up barcode:', barcode);
+    const res = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${barcode}`);
+    const data = await res.json();
+    console.log('Lookup result:', data);
+
+    if (data?.items?.length > 0) {
+      const item = data.items[0];
+      const offerPrice = item.offers?.[0]?.price ?? '';
+      const title = item.title ?? '';
+
+      setForm(prev => ({
+        ...prev,
+        name: title || prev.name,
+        price: offerPrice || prev.price
+      }));
+
+      setSuccess('Product info loaded from barcode');
+      setError(null);
+    } else {
+      setSuccess(null);
+      setError('No info found for this barcode — please enter details manually.');
     }
-  };
+  } catch (err) {
+    console.error('Error during barcode fetch:', err);
+    setError('Failed to fetch product info');
+  }
+};
+
 
   const startBarcodeScanner = async () => {
     if (typeof window !== 'undefined') {
